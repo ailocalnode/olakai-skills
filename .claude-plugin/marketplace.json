@@ -7,21 +7,9 @@
   },
   "plugins": [
     {
-      "name": "olakai-create-agent",
-      "description": "Create a new AI agent with Olakai monitoring, KPIs, and governance",
-      "source": "./plugins/olakai-create-agent",
-      "category": "development"
-    },
-    {
-      "name": "olakai-add-monitoring",
-      "description": "Add Olakai monitoring to an existing AI agent or LLM integration",
-      "source": "./plugins/olakai-add-monitoring",
-      "category": "development"
-    },
-    {
-      "name": "olakai-troubleshoot",
-      "description": "Troubleshoot Olakai monitoring issues - missing events, KPI problems, SDK errors",
-      "source": "./plugins/olakai-troubleshoot",
+      "name": "olakai",
+      "description": "Olakai AI observability - create agents, add monitoring, troubleshoot issues",
+      "source": "./plugins/olakai",
       "category": "development"
     }
   ]
