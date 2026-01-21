@@ -9,6 +9,7 @@ Official plugin for integrating AI agents with [Olakai](https://olakai.ai) - the
 | **olakai-create-agent** | Create a new AI agent with Olakai monitoring from scratch |
 | **olakai-add-monitoring** | Add Olakai monitoring to an existing AI agent |
 | **olakai-troubleshoot** | Troubleshoot monitoring issues - missing events, KPI problems |
+| **generate-analytics-reports** | Generate terminal-based analytics reports from Olakai data |
 
 ## Agent Included
 
