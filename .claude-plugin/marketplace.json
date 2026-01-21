@@ -10,7 +10,16 @@
       "name": "olakai",
       "description": "Olakai AI observability - create agents, add monitoring, troubleshoot issues, generate analytics reports",
       "source": "./plugins/olakai",
-      "category": "development"
+      "version": "1.1.0",
+      "category": "development",
+      "tags": [
+        "observability",
+        "monitoring",
+        "analytics",
+        "governance",
+        "kpi",
+        "ai-agents"
+      ]
     }
   ]
 }

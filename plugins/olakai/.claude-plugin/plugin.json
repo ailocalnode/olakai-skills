@@ -1,9 +1,22 @@
 {
   "name": "olakai",
-  "description": "Olakai AI observability - create agents with monitoring, add observability to existing code, troubleshoot issues",
+  "description": "Olakai AI observability - create agents with monitoring, add observability to existing code, troubleshoot issues, generate analytics reports",
   "version": "1.1.0",
   "author": {
     "name": "Olakai",
     "email": "support@olakai.ai"
-  }
+  },
+  "homepage": "https://olakai.ai",
+  "repository": "https://github.com/olakai-ai/olakai-skills",
+  "license": "MIT",
+  "keywords": [
+    "ai-observability",
+    "monitoring",
+    "analytics",
+    "kpi",
+    "governance",
+    "openai",
+    "anthropic",
+    "llm"
+  ]
 }

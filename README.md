@@ -11,14 +11,15 @@ These skills follow the [Agent Skills Open Standard](https://agentskills.io) and
 | **olakai-create-agent** | Create a new AI agent with Olakai monitoring from scratch |
 | **olakai-add-monitoring** | Add Olakai monitoring to an existing AI agent or LLM integration |
 | **olakai-troubleshoot** | Troubleshoot monitoring issues - missing events, KPI problems, SDK errors |
+| **generate-analytics-reports** | Generate terminal-based analytics reports (usage, KPIs, risk, ROI) without the web UI |
 
 ## Bundled Agent
 
-The **olakai-expert** agent bundles all three skills together, providing a single specialist that can handle any Olakai integration task:
+The **olakai-expert** agent bundles all four skills together, providing a single specialist that can handle any Olakai integration task:
 
 | Agent | Description |
 |-------|-------------|
-| **olakai-expert** | Full Olakai integration specialist - creates agents, adds monitoring, troubleshoots issues |
+| **olakai-expert** | Full Olakai integration specialist - creates agents, adds monitoring, troubleshoots issues, generates reports |
 
 ## Installation
 
@@ -32,6 +33,7 @@ The **olakai-expert** agent bundles all three skills together, providing a singl
 /plugin install olakai-create-agent@olakai-skills
 /plugin install olakai-add-monitoring@olakai-skills
 /plugin install olakai-troubleshoot@olakai-skills
+/plugin install generate-analytics-reports@olakai-skills
 ```
 
 ### Option 2: Direct Git Installation (User-level)
