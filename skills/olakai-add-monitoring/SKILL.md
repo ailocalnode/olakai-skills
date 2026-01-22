@@ -1,6 +1,10 @@
 ---
 name: olakai-add-monitoring
 description: Add Olakai monitoring to an existing AI agent. Use when you have working AI code that needs observability and analytics added.
+license: MIT
+metadata:
+  author: olakai
+  version: "1.2.0"
 ---
 
 # Add Olakai Monitoring to Existing Agent

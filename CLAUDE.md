@@ -12,32 +12,54 @@ This is a **Claude Code skills plugin** for the Olakai AI observability platform
 
 ## Repository Structure
 
+The repository uses a **dual-directory structure** for compatibility with both the Agent Skills standard (skills.sh) and the Claude Code plugin system.
+
 ```
 olakai-skills/
-├── .claude-plugin/
-│   └── marketplace.json          # Root marketplace manifest
+├── skills/                       # CANONICAL: Agent Skills standard structure
+│   ├── olakai-create-agent/
+│   │   └── SKILL.md              # Create new agents with monitoring (~540 lines)
+│   ├── olakai-add-monitoring/
+│   │   └── SKILL.md              # Add monitoring to existing code (~680 lines)
+│   ├── olakai-troubleshoot/
+│   │   └── SKILL.md              # Diagnose and fix issues (~610 lines)
+│   └── generate-analytics-reports/
+│       └── SKILL.md              # Generate CLI-based analytics reports (~500 lines)
 ├── plugins/
-│   └── olakai/                   # Main plugin directory
+│   └── olakai/                   # Claude Code plugin directory
 │       ├── .claude-plugin/
-│       │   └── plugin.json       # Plugin metadata (version 1.0.0)
+│       │   └── plugin.json       # Plugin metadata (version 1.1.0)
 │       ├── README.md             # Plugin documentation
 │       ├── agents/
 │       │   └── olakai-expert.md  # Bundled agent combining all skills
-│       └── skills/
-│           ├── olakai-create-agent/
-│           │   └── SKILL.md      # Create new agents with monitoring (~540 lines)
-│           ├── olakai-add-monitoring/
-│           │   └── SKILL.md      # Add monitoring to existing code (~680 lines)
-│           ├── olakai-troubleshoot/
-│           │   └── SKILL.md      # Diagnose and fix issues (~610 lines)
-│           └── generate-analytics-reports/
-│               └── SKILL.md      # Generate CLI-based analytics reports (~500 lines)
+│       └── skills/               # SYMLINKS to root skills/ directory
+│           ├── olakai-create-agent -> ../../../skills/olakai-create-agent
+│           ├── olakai-add-monitoring -> ../../../skills/olakai-add-monitoring
+│           ├── olakai-troubleshoot -> ../../../skills/olakai-troubleshoot
+│           └── generate-analytics-reports -> ../../../skills/generate-analytics-reports
+├── .claude-plugin/
+│   └── marketplace.json          # Root marketplace manifest
 ├── docs/
 │   └── publishing-guide.md       # Distribution & packaging guide
 ├── CLAUDE.md                     # This file
-├── README.md                     # User-facing installation guide
+├── README.md                     # User-facing installation guide (skills.sh compatible)
+├── AGENTS.md                     # Agent compatibility documentation
 └── LICENSE                       # MIT License
 ```
+
+### Dual-Directory Design
+
+**Root `skills/` directory** (canonical location):
+- Contains the actual SKILL.md files
+- Follows the Agent Skills standard structure
+- Used by `npx add-skill` for installation
+- Edits should be made here
+
+**`plugins/olakai/skills/` directory** (symlinks):
+- Contains symbolic links pointing to root `skills/`
+- Provides Claude Code plugin compatibility
+- Changes in root skills/ are automatically reflected here
+- Do NOT edit files through symlinks directly
 
 ## Skills Overview
 
@@ -48,7 +70,11 @@ olakai-skills/
 | `olakai-troubleshoot` | ~610 | Diagnose missing events, KPI issues, SDK errors |
 | `generate-analytics-reports` | ~500 | Generate terminal-based analytics reports (usage, KPIs, risk, ROI) |
 
-Each skill follows YAML frontmatter + Markdown format with progressive disclosure (description loads at startup, full body on activation).
+Each skill follows YAML frontmatter + Markdown format with:
+- `name`: Skill identifier
+- `description`: Brief purpose
+- `license`: MIT
+- `metadata`: Author and version info
 
 ## The Golden Rule
 
@@ -67,6 +93,38 @@ olakai activity get EVENT_ID --json | jq '{customData, kpiData}'
 ```
 
 This pattern MUST be preserved across all skills.
+
+---
+
+## Installation Methods
+
+### Agent Skills Standard (Recommended)
+
+```bash
+# Using add-skill CLI
+npx add-skill olakai-ai/olakai-skills --list
+npx add-skill olakai-ai/olakai-skills/olakai-create-agent
+```
+
+### Claude Code Plugin
+
+```bash
+# Plugin Marketplace
+/plugin marketplace add olakai-ai/olakai-skills
+/plugin install olakai-create-agent@olakai-skills
+```
+
+### Direct Git (user-level)
+
+```bash
+git clone https://github.com/olakai-ai/olakai-skills ~/.claude/skills/olakai-skills
+```
+
+### Project-level
+
+```bash
+git clone https://github.com/olakai-ai/olakai-skills .claude/skills/olakai-skills
+```
 
 ---
 
@@ -140,30 +198,30 @@ When updating source repositories, run these checks:
 # After CLI changes in olakai-cli:
 cd olakai-skills
 
-# Find all CLI command references
-grep -r "olakai agents" plugins/
-grep -r "olakai activity" plugins/
-grep -r "olakai kpis" plugins/
-grep -r "olakai custom-data" plugins/
-grep -r "olakai login\|olakai whoami" plugins/
+# Find all CLI command references (search root skills/ directory)
+grep -r "olakai agents" skills/
+grep -r "olakai activity" skills/
+grep -r "olakai kpis" skills/
+grep -r "olakai custom-data" skills/
+grep -r "olakai login\|olakai whoami" skills/
 
 # After TypeScript SDK changes:
-grep -r "OlakaiSDK" plugins/
-grep -r "olakai.wrap" plugins/
-grep -r "olakai.event" plugins/
-grep -r "olakai.init" plugins/
-grep -r "@olakai/sdk" plugins/
+grep -r "OlakaiSDK" skills/
+grep -r "olakai.wrap" skills/
+grep -r "olakai.event" skills/
+grep -r "olakai.init" skills/
+grep -r "@olakai/sdk" skills/
 
 # After Python SDK changes:
-grep -r "olakai_config" plugins/
-grep -r "instrument_openai" plugins/
-grep -r "olakai_event" plugins/
-grep -r "olakai_context" plugins/
-grep -r "olakaisdk" plugins/
+grep -r "olakai_config" skills/
+grep -r "instrument_openai" skills/
+grep -r "olakai_event" skills/
+grep -r "olakai_context" skills/
+grep -r "olakaisdk" skills/
 
 # After API endpoint changes:
-grep -r "api/monitoring/prompt" plugins/
-grep -r "app.olakai.ai" plugins/
+grep -r "api/monitoring/prompt" skills/
+grep -r "app.olakai.ai" skills/
 ```
 
 ### CLI Commands Referenced in Skills
@@ -242,43 +300,25 @@ olakai_event(OlakaiEventParams(prompt=str, response=str, tokens=int, requestTime
 ### Skill File Guidelines
 
 1. **Keep under 500 lines** - Preserves Claude's context for actual work
-2. **YAML frontmatter required** - `name`, `description` fields
+2. **YAML frontmatter required** - `name`, `description`, `license`, `metadata` fields
 3. **Test after changes** - Install skill in Claude Code and invoke it
 4. **Preserve the Golden Rule** - Test → Fetch → Validate pattern in all skills
 
 ### Adding New Skills
 
-1. Create directory: `plugins/olakai/skills/new-skill-name/SKILL.md`
-2. Add YAML frontmatter with `name` and `description`
-3. Follow existing skill structure
-4. Update this CLAUDE.md if skill references new CLI/SDK patterns
+1. Create directory in root: `skills/new-skill-name/SKILL.md`
+2. Add YAML frontmatter with `name`, `description`, `license`, `metadata`
+3. Create symlink: `ln -s ../../../skills/new-skill-name plugins/olakai/skills/new-skill-name`
+4. Follow existing skill structure
+5. Update this CLAUDE.md if skill references new CLI/SDK patterns
 
 ### Modifying Existing Skills
 
-1. Check if change affects the Golden Rule validation pattern
-2. Ensure code examples compile/run correctly
-3. Verify CLI commands match current `olakai-cli` implementation
-4. Test the skill in Claude Code after changes
-
----
-
-## Installation Methods
-
-**Plugin Marketplace (recommended):**
-```bash
-/plugin marketplace add olakai/olakai-skills
-/plugin install olakai-create-agent@olakai-skills
-```
-
-**Direct Git (user-level):**
-```bash
-git clone https://github.com/olakai/olakai-skills ~/.claude/skills/olakai-skills
-```
-
-**Project-level:**
-```bash
-git clone https://github.com/olakai/olakai-skills .claude/skills/olakai-skills
-```
+1. **Edit in root `skills/` directory** (not through symlinks)
+2. Check if change affects the Golden Rule validation pattern
+3. Ensure code examples compile/run correctly
+4. Verify CLI commands match current `olakai-cli` implementation
+5. Test the skill in Claude Code after changes
 
 ---
 
@@ -286,9 +326,10 @@ git clone https://github.com/olakai/olakai-skills .claude/skills/olakai-skills
 
 When bumping version in `plugins/olakai/.claude-plugin/plugin.json`:
 
-1. Update version number (currently 1.0.0)
-2. Ensure all SKILL.md files are in sync with current CLI/SDK versions
-3. Update changelog if maintained
+1. Update version number (currently 1.1.0)
+2. Update version in all SKILL.md frontmatter metadata
+3. Ensure all SKILL.md files are in sync with current CLI/SDK versions
+4. Update changelog if maintained
 
 ---
 
