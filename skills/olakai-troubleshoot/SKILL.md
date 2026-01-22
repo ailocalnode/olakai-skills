@@ -1,6 +1,10 @@
 ---
 name: olakai-troubleshoot
 description: Troubleshoot Olakai monitoring issues. Use when events aren't appearing, KPIs show wrong values, or custom data is missing.
+license: MIT
+metadata:
+  author: olakai
+  version: "1.2.0"
 ---
 
 # Troubleshoot Olakai Agent Monitoring

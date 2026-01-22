@@ -1,6 +1,10 @@
 ---
 name: generate-analytics-reports
 description: Generate analytics reports from Olakai data using CLI commands. Use when users want usage summaries, KPI trends, risk analysis, or efficiency reports without accessing the web UI.
+license: MIT
+metadata:
+  author: olakai
+  version: "1.2.0"
 ---
 
 # Generate Analytics Reports

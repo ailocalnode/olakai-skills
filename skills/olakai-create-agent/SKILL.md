@@ -1,6 +1,10 @@
 ---
 name: olakai-create-agent
 description: Create a new AI agent with Olakai monitoring. Use when building AI features, workflows, or agents that need observability, KPI tracking, and governance.
+license: MIT
+metadata:
+  author: olakai
+  version: "1.2.0"
 ---
 
 # Create AI Agent with Olakai Monitoring
