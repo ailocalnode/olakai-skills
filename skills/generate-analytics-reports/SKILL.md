@@ -4,7 +4,7 @@ description: Generate analytics reports from Olakai data using CLI commands. Use
 license: MIT
 metadata:
   author: olakai
-  version: "1.2.0"
+  version: "1.3.0"
 ---
 
 # Generate Analytics Reports

@@ -270,8 +270,8 @@ await olakai.init();
 // Wrapped client
 const openai = olakai.wrap(new OpenAI({ apiKey }), { provider: "openai", defaultContext: {...} });
 
-// Call with context
-await openai.chat.completions.create(params, { userEmail, chatId, task, customData });
+// Call with context (session grouping is automatic)
+await openai.chat.completions.create(params, { userEmail, task, customData });
 
 // Manual event
 olakai.event({ prompt, response, tokens, requestTime, task, customData });
@@ -330,6 +330,18 @@ When bumping version in `plugins/olakai/.claude-plugin/plugin.json`:
 2. Update version in all SKILL.md frontmatter metadata
 3. Ensure all SKILL.md files are in sync with current CLI/SDK versions
 4. Update changelog if maintained
+
+### SDK/CLI Versions Reference
+
+The authoritative source for current published SDK/CLI versions is:
+`localnode-app/packages/config/sdk-versions.ts`
+
+Check this file to ensure skills reference the correct versions:
+- TypeScript SDK: `@olakai/sdk`
+- Python SDK: `olakai-sdk` (PyPI)
+- CLI: `olakai-cli`
+
+When SDK or CLI releases occur, verify that code examples in SKILL.md files are compatible with the new version.
 
 ---
 

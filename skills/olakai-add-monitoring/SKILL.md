@@ -4,7 +4,7 @@ description: Add Olakai monitoring to an existing AI agent. Use when you have wo
 license: MIT
 metadata:
   author: olakai
-  version: "1.2.0"
+  version: "1.3.0"
 ---
 
 # Add Olakai Monitoring to Existing Agent
@@ -183,10 +183,10 @@ const response = await openai.chat.completions.create(
   },
   {
     userEmail: user.email,        // Track by user
-    chatId: conversationId,       // Group by conversation
     task: "Customer Experience",  // Categorize
   }
 );
+// Session grouping is automatic
 ```
 
 Python:
@@ -195,13 +195,14 @@ from olakaisdk import olakai_context
 
 with olakai_context(
     userEmail=user.email,
-    chatId=conversation_id,
+    userId=user.id,  # Optional: explicit user tracking
     task="Customer Experience"
 ):
     response = client.chat.completions.create(
         model="gpt-4",
         messages=[{"role": "user", "content": user_message}]
     )
+# Note: Session grouping is automatic via internal sessionId
 ```
 
 #### Adding Custom Data
@@ -359,10 +360,10 @@ export async function POST(req: NextRequest) {
     },
     {
       userEmail: session.user.email!,
-      chatId: conversationId,
       task: "Customer Experience",
     }
   );
+  // Session grouping is automatic
 
   return NextResponse.json({
     reply: response.choices[0].message.content,
@@ -393,8 +394,9 @@ router.post("/", async (req, res) => {
 
   const response = await openai.chat.completions.create(
     { model: "gpt-4o", messages: [{ role: "user", content: message }] },
-    { userEmail: req.user.email, chatId: req.body.conversationId }
+    { userEmail: req.user.email }
   );
+  // Session grouping is automatic
 
   res.json({ reply: response.choices[0].message.content });
 });
@@ -638,7 +640,7 @@ $ olakai activity get cmkeabc123 --json | jq '{customData, kpiData}'
 | API endpoint | Request handler | Wrap client, add user context |
 | Background job | Job execution | Manual event at job completion |
 | CLI tool | Command handler | Wrap client |
-| Slack/Discord bot | Message handler | Wrap client, use chatId for threads |
+| Slack/Discord bot | Message handler | Wrap client with user context |
 | Scheduled task | Cron function | Manual event with workflow aggregation |
 
 ## Quick Reference
@@ -647,10 +649,9 @@ $ olakai activity get cmkeabc123 --json | jq '{customData, kpiData}'
 // Wrap client (automatic tracking)
 const openai = olakai.wrap(new OpenAI({ apiKey }), { provider: "openai" });
 
-// Add context to calls
+// Add context to calls (session grouping is automatic)
 await openai.chat.completions.create(params, {
   userEmail: "user@example.com",
-  chatId: "conversation-123",
   task: "Customer Experience",
   customData: { key: "value" }
 });
