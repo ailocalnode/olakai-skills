@@ -4,7 +4,7 @@ description: Troubleshoot Olakai monitoring issues. Use when events aren't appea
 license: MIT
 metadata:
   author: olakai
-  version: "1.2.0"
+  version: "1.3.0"
 ---
 
 # Troubleshoot Olakai Agent Monitoring

@@ -1,7 +1,7 @@
 {
   "name": "olakai",
   "description": "Olakai AI observability - create agents with monitoring, add observability to existing code, troubleshoot issues, generate analytics reports",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "author": {
     "name": "Olakai",
     "email": "support@olakai.ai"

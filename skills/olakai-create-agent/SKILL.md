@@ -4,7 +4,7 @@ description: Create a new AI agent with Olakai monitoring. Use when building AI 
 license: MIT
 metadata:
   author: olakai
-  version: "1.2.0"
+  version: "1.3.0"
 ---
 
 # Create AI Agent with Olakai Monitoring
