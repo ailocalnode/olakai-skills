@@ -33,6 +33,59 @@ Before starting, ensure:
 2. CLI authenticated: `olakai login`
 3. API key for SDK (generated per-agent via CLI - see Step 2.1)
 
+## Why Custom KPIs Are Essential
+
+Olakai's core value is **tracking business-specific KPIs for your AI agents**. Without KPIs, you're just logging events - not gaining actionable insights.
+
+**What you can measure with KPIs:**
+- Business outcomes (items processed, success rates, revenue impact)
+- Operational metrics (step counts, retry rates, execution time)
+- Quality indicators (error rates, user satisfaction signals)
+
+**Without KPIs configured:**
+- ❌ No dashboard metrics beyond basic token counts
+- ❌ No aggregated performance views
+- ❌ No alerting thresholds
+- ❌ No ROI calculations
+
+> ⚠️ **Every agent should have 2-4 KPIs that answer: "How do I know this agent is performing well?"**
+
+## Understanding the customData → KPI Pipeline
+
+Before diving into implementation, understand how data flows through Olakai:
+
+```
+SDK customData → CustomDataConfig (Schema) → Context Variable → KPI Formula → kpiData
+```
+
+### How It Works
+
+1. **customData** (SDK): Raw JSON you send with each event
+2. **CustomDataConfig** (Platform): Schema defining which fields are processed
+3. **Context Variables**: CustomDataConfig fields become available for formulas
+4. **KPI Formula**: Expression that computes a metric (e.g., `SuccessRate * 100`)
+5. **kpiData** (Response): Computed KPI values returned with each event
+
+### Critical Rules
+
+| Rule | Consequence |
+|------|-------------|
+| Only CustomDataConfig fields become variables | Unregistered customData fields are NOT usable in KPIs |
+| Formula evaluation is case-insensitive | `stepCount`, `STEPCOUNT`, `StepCount` all work in formulas |
+| NUMBER configs need numeric values | Don't send `"5"` (string), send `5` (number) |
+
+### Built-in Context Variables (Always Available)
+
+| Variable | Type | Description |
+|----------|------|-------------|
+| `Prompt` | string | The prompt text sent to the LLM |
+| `Response` | string | The LLM response text |
+| `Documents count` | number | Number of attached documents |
+| `PII detected` | boolean | Whether PII was detected |
+| `PHI detected` | boolean | Whether PHI was detected |
+| `CODE detected` | boolean | Whether code was detected |
+| `SECRET detected` | boolean | Whether secrets were detected |
+
 ## Step 1: Design the Agent Architecture
 
 ### 1.1 Determine Agent Type
@@ -47,29 +100,45 @@ Before starting, ensure:
 - Track EACH interaction as separate events
 - Focus on conversation-level metrics (per-message tokens, response quality)
 
-### 1.2 Define Metrics to Track
+### 1.2 Design Your Metrics Schema (CRITICAL)
 
-Plan what custom data your agent will report:
+**Design your metrics BEFORE writing any SDK code.** This ensures only meaningful data is sent and tracked.
+
+#### Step A: Identify Business Questions
+
+What do stakeholders need to know about this agent?
+- "How many items does it process per run?"
+- "What's the success/failure rate?"
+- "How efficient is each execution?"
+
+#### Step B: Map Questions to Metrics
+
+| Business Question | Field Name | Type | KPI Formula | Aggregation |
+|-------------------|------------|------|-------------|-------------|
+| Throughput | ItemsProcessed | NUMBER | `ItemsProcessed` | SUM |
+| Reliability | SuccessRate | NUMBER | `SuccessRate * 100` | AVERAGE |
+| Error count | SuccessRate | NUMBER | `IF(SuccessRate < 1, 1, 0)` | SUM |
+| Workflow ID | ExecutionId | STRING | (for filtering only) | - |
+
+#### Step C: Plan Your customData Structure
 
 ```typescript
-// Example custom data fields for an agent
+// ONLY include fields you'll register as CustomDataConfigs
 customData: {
-  // Workflow identification
-  workflowId: string,      // Unique workflow run ID
-  executionId: string,     // Correlation ID across steps
+  // Business metrics (will become KPIs)
+  ItemsProcessed: number,  // Count of items handled
+  SuccessRate: number,     // 0-1 success ratio
 
-  // Business metrics
-  itemsProcessed: number,  // Count of items handled
-  successRate: number,     // 0-1 success ratio
+  // Performance metrics (will become KPIs)
+  StepCount: number,       // Number of workflow steps
 
-  // Performance metrics
-  stepCount: number,       // Number of workflow steps
-  retryCount: number,      // Number of retries needed
-
-  // Domain-specific
-  [yourMetric]: number | string | boolean
+  // Identification (for filtering, not KPIs)
+  ExecutionId: string,     // Correlation ID
 }
 ```
+
+> ⚠️ **IMPORTANT**: Only include fields you will register as CustomDataConfigs.
+> Unregistered fields are stored but **cannot be used in KPIs** - they're effectively wasted data.
 
 ## Step 2: Configure Olakai Platform
 
@@ -94,23 +163,30 @@ olakai agents create \
 olakai agents get AGENT_ID --json | jq '.apiKey'
 ```
 
-### 2.2 Create Custom Data Configurations
+### 2.2 Create Custom Data Configurations (BEFORE Writing SDK Code)
 
-For each custom metric your agent will report, create a CustomDataConfig:
+> ⚠️ **This step MUST be completed before Step 3 (SDK Integration).**
+> Only fields registered here can be used in KPI formulas. Design the schema first, then code to it.
+
+For each custom metric from Step 1.2, create a CustomDataConfig:
 
 ```bash
-# For numeric metrics
+# For numeric metrics (can be used in KPI calculations)
 olakai custom-data create --name "ItemsProcessed" --type NUMBER --description "Count of items processed per run"
 olakai custom-data create --name "SuccessRate" --type NUMBER --description "Success ratio 0-1"
 olakai custom-data create --name "StepCount" --type NUMBER --description "Number of workflow steps executed"
 
-# For string metrics
-olakai custom-data create --name "WorkflowId" --type STRING --description "Unique workflow run identifier"
+# For string metrics (for filtering/grouping, not calculations)
 olakai custom-data create --name "ExecutionId" --type STRING --description "Correlation ID for the execution"
 
 # Verify all configs are created
 olakai custom-data list
 ```
+
+**What this enables:**
+- ✅ These field names become **context variables** in KPI formulas
+- ✅ Values sent in SDK `customData` with these names are processed
+- ❌ Any `customData` field NOT listed here is ignored for KPI purposes
 
 ### 2.3 Create KPI Definitions
 
@@ -240,6 +316,7 @@ async function runAgent(input: string): Promise<string> {
     const finalResponse = summary.choices[0].message.content ?? "";
 
     // Track the complete workflow as a single event
+    // ⚠️ IMPORTANT: Only send fields that have CustomDataConfigs (from Step 2.2)
     olakai.event({
       prompt: input,
       response: finalResponse,
@@ -247,16 +324,18 @@ async function runAgent(input: string): Promise<string> {
       requestTime: Date.now() - startTime,
       task: "Data Processing & Analysis",
       customData: {
-        executionId,
-        stepCount,
-        itemsProcessed,
-        successRate: 1.0,
+        // Only include fields registered in Step 2.2
+        ExecutionId: executionId,
+        StepCount: stepCount,
+        ItemsProcessed: itemsProcessed,
+        SuccessRate: 1.0,
+        // ❌ DON'T add unregistered fields - they can't be used in KPIs
       },
     });
 
     return finalResponse;
   } catch (error) {
-    // Track failed execution
+    // Track failed execution - same fields, different values
     olakai.event({
       prompt: input,
       response: `Error: ${error instanceof Error ? error.message : "Unknown"}`,
@@ -264,10 +343,10 @@ async function runAgent(input: string): Promise<string> {
       requestTime: Date.now() - startTime,
       task: "Data Processing & Analysis",
       customData: {
-        executionId,
-        stepCount,
-        itemsProcessed,
-        successRate: 0,
+        ExecutionId: executionId,
+        StepCount: stepCount,
+        ItemsProcessed: itemsProcessed,
+        SuccessRate: 0,  // 0 indicates failure
       },
     });
     throw error;
@@ -327,6 +406,7 @@ def run_agent(input_text: str) -> str:
         final_response = response.choices[0].message.content
 
         # Track successful execution
+        # ⚠️ Only send fields registered as CustomDataConfigs
         olakai_event(OlakaiEventParams(
             prompt=input_text,
             response=final_response,
@@ -334,17 +414,17 @@ def run_agent(input_text: str) -> str:
             requestTime=int((time.time() - start_time) * 1000),
             task="Data Processing & Analysis",
             customData={
-                "executionId": execution_id,
-                "stepCount": step_count,
-                "itemsProcessed": items_processed,
-                "successRate": 1.0,
+                "ExecutionId": execution_id,
+                "StepCount": step_count,
+                "ItemsProcessed": items_processed,
+                "SuccessRate": 1.0,
             }
         ))
 
         return final_response
 
     except Exception as e:
-        # Track failed execution
+        # Track failed execution - same fields, different values
         olakai_event(OlakaiEventParams(
             prompt=input_text,
             response=f"Error: {str(e)}",
@@ -352,10 +432,10 @@ def run_agent(input_text: str) -> str:
             requestTime=int((time.time() - start_time) * 1000),
             task="Data Processing & Analysis",
             customData={
-                "executionId": execution_id,
-                "stepCount": step_count,
-                "itemsProcessed": items_processed,
-                "successRate": 0,
+                "ExecutionId": execution_id,
+                "StepCount": step_count,
+                "ItemsProcessed": items_processed,
+                "SuccessRate": 0,  # 0 indicates failure
             }
         ))
         raise
@@ -366,6 +446,7 @@ def run_agent(input_text: str) -> str:
 For other languages or custom integrations:
 
 ```bash
+# ⚠️ customData fields must match registered CustomDataConfigs exactly
 curl -X POST "https://app.olakai.ai/api/monitoring/prompt" \
   -H "Content-Type: application/json" \
   -H "x-api-key: YOUR_API_KEY" \
@@ -377,10 +458,10 @@ curl -X POST "https://app.olakai.ai/api/monitoring/prompt" \
     "tokens": 1500,
     "requestTime": 5000,
     "customData": {
-      "executionId": "abc-123",
-      "stepCount": 5,
-      "itemsProcessed": 10,
-      "successRate": 1.0
+      "ExecutionId": "abc-123",
+      "StepCount": 5,
+      "ItemsProcessed": 10,
+      "SuccessRate": 1.0
     }
   }'
 ```
@@ -419,10 +500,10 @@ olakai activity get EVENT_ID --json | jq '.customData'
 Expected output:
 ```json
 {
-  "executionId": "abc-123",
-  "stepCount": 5,
-  "itemsProcessed": 10,
-  "successRate": 1.0
+  "ExecutionId": "abc-123",
+  "StepCount": 5,
+  "ItemsProcessed": 10,
+  "SuccessRate": 1.0
 }
 ```
 
@@ -501,14 +582,14 @@ $ olakai activity list --agent-id cmkxxx --limit 1 --json | jq '.prompts[0].id'
 $ olakai activity get cmkeyyy --json | jq '{customData, kpiData}'
 {
   "customData": {
-    "stepCount": 3,
-    "itemsProcessed": 5,
-    "successRate": 1
+    "StepCount": 3,
+    "ItemsProcessed": 5,
+    "SuccessRate": 1
   },
   "kpiData": {
     "Steps Executed": 3,        # ✅ Numeric
     "Items Processed": 5,       # ✅ Numeric
-    "Success Rate": 100         # ✅ Numeric (formula: successRate * 100)
+    "Success Rate": 100         # ✅ Numeric (formula: SuccessRate * 100)
   }
 }
 
@@ -526,6 +607,48 @@ Before deploying to production:
 - [ ] KPI formulas validated and showing numeric values (not strings)
 - [ ] SDK configured with appropriate retries and timeouts
 - [ ] Sensitive data redaction enabled if needed
+
+## KPI Formula Reference
+
+### Supported Operators
+
+| Category | Operators |
+|----------|-----------|
+| Arithmetic | `+`, `-`, `*`, `/` |
+| Comparison | `<`, `<=`, `=`, `<>`, `>=`, `>` |
+| Logical | `AND`, `OR`, `NOT` |
+| Conditional | `IF(condition, true_val, false_val)`, `MAP(value, match1, out1, default)` |
+| Math | `ABS`, `MAX`, `MIN`, `AVERAGE`, `TRUNC` |
+| Null handling | `ISNA(value)`, `ISDEFINED(value)`, `NA()` |
+
+### Common Formula Patterns
+
+```bash
+# Simple variable passthrough
+--formula "ItemsProcessed"
+
+# Percentage conversion (0-1 to 0-100)
+--formula "SuccessRate * 100"
+
+# Conditional counting (count failures)
+--formula "IF(SuccessRate < 1, 1, 0)"
+
+# Boolean to number conversion
+--formula "IF(PII detected, 1, 0)"
+
+# Null-safe with default value
+--formula "IF(ISDEFINED(MyField), MyField, 0)"
+
+# Compound conditions
+--formula "IF(AND(StepCount > 5, SuccessRate < 0.9), 1, 0)"
+```
+
+### Aggregation Types
+
+| Aggregation | Use For | Example |
+|-------------|---------|---------|
+| `SUM` | Totals, counts | Total items processed across all runs |
+| `AVERAGE` | Rates, percentages | Average success rate |
 
 ## Task Categories Reference
 

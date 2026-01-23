@@ -37,6 +37,42 @@ For full SDK documentation, see: https://app.olakai.ai/llms.txt
 
 > **Note:** Each agent can have its own API key. Create one with `olakai agents create --name "Name" --with-api-key`
 
+## Why Custom KPIs Are Essential
+
+Adding monitoring is only the first step. **The real value of Olakai comes from tracking custom KPIs specific to your agent's business purpose.**
+
+**Without KPIs configured:**
+- ❌ Only basic token counts and request logs
+- ❌ No aggregated business metrics on dashboard
+- ❌ No alerting capabilities
+- ❌ No ROI tracking
+
+**With KPIs configured:**
+- ✅ Custom metrics (items processed, success rates, quality scores)
+- ✅ Trend analysis and performance dashboards
+- ✅ Threshold-based alerting
+- ✅ Business value calculations
+
+> ⚠️ **Plan to configure at least 2-4 KPIs** that answer: "How do I know this agent is performing well?"
+
+## Understanding the customData → KPI Pipeline
+
+Before adding monitoring, understand how custom data flows through Olakai:
+
+```
+SDK customData → CustomDataConfig (Schema) → Context Variable → KPI Formula → kpiData
+```
+
+### Critical Rules
+
+| Rule | Consequence |
+|------|-------------|
+| Only CustomDataConfig fields become variables | Unregistered customData fields are NOT usable in KPIs |
+| Formula evaluation is case-insensitive | `stepCount`, `STEPCOUNT`, `StepCount` all work in formulas |
+| NUMBER configs need numeric values | Don't send `"5"` (string), send `5` (number) |
+
+> ⚠️ **IMPORTANT**: The SDK accepts any JSON in `customData`, but **only fields registered as CustomDataConfigs are processed**. Unregistered fields are stored but cannot be used in KPIs.
+
 ## Quick Start (5-Minute Integration)
 
 ### For TypeScript/JavaScript
@@ -222,6 +258,8 @@ with olakai_context(
 
 #### Adding Custom Data
 
+> ⚠️ **IMPORTANT**: Only send fields you've registered as CustomDataConfigs (Step 5.3). Unregistered fields are stored but **cannot be used in KPIs**.
+
 TypeScript:
 ```typescript
 const response = await openai.chat.completions.create(
@@ -229,10 +267,11 @@ const response = await openai.chat.completions.create(
   {
     userEmail: user.email,
     customData: {
-      department: user.department,
-      projectId: currentProject.id,
-      isProduction: process.env.NODE_ENV === "production",
-      priority: ticket.priority,
+      // Only include fields registered as CustomDataConfigs
+      Department: user.department,
+      ProjectId: currentProject.id,
+      Priority: ticket.priority,
+      // ❌ Don't add unregistered fields - they can't be used in KPIs
     },
   }
 );
@@ -243,9 +282,10 @@ Python:
 with olakai_context(
     userEmail=user.email,
     customData={
-        "department": user.department,
-        "projectId": project.id,
-        "priority": ticket.priority
+        # Only include fields registered as CustomDataConfigs
+        "Department": user.department,
+        "ProjectId": project.id,
+        "Priority": ticket.priority
     }
 ):
     response = client.chat.completions.create(...)
@@ -287,6 +327,7 @@ async function processDocument(doc: Document): Promise<ProcessingResult> {
   const result = summary.choices[0].message.content ?? "";
 
   // Track the complete workflow as ONE event
+  // ⚠️ Only send fields registered as CustomDataConfigs
   olakai.event({
     prompt: `Process document: ${doc.title}`,
     response: result,
@@ -294,10 +335,11 @@ async function processDocument(doc: Document): Promise<ProcessingResult> {
     requestTime: Date.now() - startTime,
     task: "Data Processing & Analysis",
     customData: {
-      documentId: doc.id,
-      documentType: doc.type,
-      stepCount: 3,
-      success: true,
+      // Only registered fields - see Step 5.3
+      DocumentId: doc.id,
+      DocumentType: doc.type,
+      StepCount: 3,
+      Success: 1,  // Use 1/0 for boolean in NUMBER fields
     },
   });
 
@@ -305,48 +347,80 @@ async function processDocument(doc: Document): Promise<ProcessingResult> {
 }
 ```
 
-### Step 5: Configure Platform (Optional but Recommended)
+### Step 5: Configure Custom Metrics (Essential for Value)
 
-#### Install CLI
+> ⚠️ **This step is required to get real value from Olakai.** Without KPIs, you're only logging events - not gaining actionable insights.
+
+| Without KPIs | With KPIs |
+|--------------|-----------|
+| Raw event logs only | Aggregated business metrics |
+| No dashboard insights | Visual performance trends |
+| No alerting | Threshold-based alerts |
+| No ROI tracking | Calculated business value |
+
+#### 5.1 Install CLI (if not already)
 ```bash
 npm install -g olakai-cli
 olakai login
 ```
 
-#### Register Your Agent
+#### 5.2 Register Your Agent
 ```bash
 # Create agent entry
-olakai agents create --name "Document Processor" --description "Processes and summarizes documents"
+olakai agents create --name "Document Processor" --description "Processes and summarizes documents" --with-api-key
 
 # Note the agent ID returned
 ```
 
-#### Create Custom Data Configs
+#### 5.3 Create Custom Data Configs FIRST
 
-For each custom field you send, create a config so KPIs can reference it:
+> ⚠️ **IMPORTANT**: Create configs for ALL fields you send in `customData`. Only registered fields can be used in KPIs.
 
 ```bash
-olakai custom-data create --name "documentId" --type STRING
-olakai custom-data create --name "documentType" --type STRING
-olakai custom-data create --name "stepCount" --type NUMBER
-olakai custom-data create --name "success" --type NUMBER  # Use 1/0 for boolean
+# For each field in your customData, create a config
+olakai custom-data create --name "DocumentId" --type STRING
+olakai custom-data create --name "DocumentType" --type STRING
+olakai custom-data create --name "StepCount" --type NUMBER
+olakai custom-data create --name "Success" --type NUMBER  # Use 1/0 for boolean
+
+# Verify all configs exist
+olakai custom-data list
 ```
 
-#### Create KPIs
+**What this enables:**
+- ✅ These field names become **context variables** in KPI formulas
+- ✅ Values sent in SDK `customData` with these names are processed
+- ❌ Any `customData` field NOT listed here is ignored for KPI purposes
+
+#### 5.4 Create KPIs
 ```bash
 olakai kpis create \
   --name "Documents Processed" \
   --agent-id YOUR_AGENT_ID \
   --calculator-id formula \
-  --formula "IF(success = 1, 1, 0)" \
+  --formula "IF(Success = 1, 1, 0)" \
   --aggregation SUM
 
 olakai kpis create \
   --name "Avg Steps per Document" \
   --agent-id YOUR_AGENT_ID \
   --calculator-id formula \
-  --formula "stepCount" \
+  --formula "StepCount" \
   --aggregation AVERAGE
+```
+
+#### 5.5 Update SDK Code to Match
+
+After creating configs, ensure your SDK code sends **exactly those field names**:
+
+```typescript
+customData: {
+  DocumentId: doc.id,       // Matches CustomDataConfig "DocumentId"
+  DocumentType: doc.type,   // Matches CustomDataConfig "DocumentType"
+  StepCount: 3,             // Matches CustomDataConfig "StepCount"
+  Success: true ? 1 : 0,    // Matches CustomDataConfig "Success"
+  // ❌ Don't add fields without configs - they won't be usable in KPIs
+}
 ```
 
 ## Framework-Specific Integrations
@@ -657,6 +731,41 @@ $ olakai activity get cmkeabc123 --json | jq '{customData, kpiData}'
 | CLI tool | Command handler | Wrap client |
 | Slack/Discord bot | Message handler | Wrap client with user context |
 | Scheduled task | Cron function | Manual event with workflow aggregation |
+
+## KPI Formula Reference
+
+### Supported Operators
+
+| Category | Operators |
+|----------|-----------|
+| Arithmetic | `+`, `-`, `*`, `/` |
+| Comparison | `<`, `<=`, `=`, `<>`, `>=`, `>` |
+| Logical | `AND`, `OR`, `NOT` |
+| Conditional | `IF(condition, true_val, false_val)` |
+| Null handling | `ISNA(value)`, `ISDEFINED(value)` |
+
+### Common Formula Patterns
+
+```bash
+# Simple passthrough
+--formula "StepCount"
+
+# Percentage conversion
+--formula "SuccessRate * 100"
+
+# Conditional counting
+--formula "IF(Success = 1, 1, 0)"
+
+# Boolean detection to number
+--formula "IF(PII detected, 1, 0)"
+```
+
+### Aggregation Types
+
+| Aggregation | Use For |
+|-------------|---------|
+| `SUM` | Totals, counts |
+| `AVERAGE` | Rates, percentages |
 
 ## Quick Reference
 

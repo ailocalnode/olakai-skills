@@ -104,6 +104,64 @@ This pattern MUST be preserved across all skills.
 
 ---
 
+## Critical Concept: customData → KPI Pipeline
+
+**This is the most important concept to convey to users.** Understanding this pipeline prevents most integration issues.
+
+### The Data Flow
+
+```
+SDK customData → CustomDataConfig (Schema) → Context Variable → KPI Formula → kpiData
+```
+
+1. **SDK customData**: Raw JSON sent with each event (accepts any structure)
+2. **CustomDataConfig**: Platform schema defining which fields are processed
+3. **Context Variable**: CustomDataConfig fields become available for formulas
+4. **KPI Formula**: Expression that computes a metric (e.g., `SuccessRate * 100`)
+5. **kpiData**: Computed KPI values returned with each event
+
+### The Critical Insight
+
+> ⚠️ **The SDK accepts any JSON in customData, but ONLY fields with CustomDataConfigs become KPI variables.**
+
+| What You Send | CustomDataConfig Exists? | Result |
+|---------------|-------------------------|--------|
+| `ItemsProcessed: 10` | ✅ Yes | Available in KPIs, queryable |
+| `randomField: "foo"` | ❌ No | Stored but **NOT usable in KPIs** |
+
+### Why This Matters
+
+When implementing agents, coding assistants often:
+- ❌ Send extra "helpful" fields in customData that are never registered
+- ❌ Create KPIs before CustomDataConfigs exist
+- ❌ Skip KPI setup entirely, losing Olakai's core value
+
+### The Correct Sequence
+
+1. **Design metrics** - Decide what fields you need
+2. **Create CustomDataConfigs** - `olakai custom-data create --name X --type NUMBER`
+3. **Create KPIs** - `olakai kpis create --formula "X" --agent-id ID`
+4. **THEN write SDK code** - Send only registered fields in customData
+
+---
+
+## KPIs Are Mandatory, Not Optional
+
+**Olakai's value proposition is custom KPI tracking.** Skills must emphasize:
+
+- Every agent should have 2-4 KPIs
+- KPIs answer: "How do I know this agent is performing well?"
+- Without KPIs, you're just logging - not gaining insights
+
+### Typical KPIs by Agent Type
+
+| Agent Type | Typical KPIs |
+|------------|--------------|
+| **Agentic (workflows)** | Items processed, success rate, step efficiency, error count |
+| **Assistive (chatbots)** | Response quality, resolution rate, user satisfaction |
+
+---
+
 ## Skill Auto-Invocation Guide
 
 Before answering Olakai-related questions, evaluate whether to load a skill:

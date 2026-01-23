@@ -342,6 +342,75 @@ customData: {
 
 ---
 
+## Issue: customData Fields Not Available in KPIs
+
+### Symptom
+You're sending fields in `customData` but they can't be used in KPI formulas - they don't appear as available variables.
+
+### Root Cause
+
+**The SDK accepts any JSON in `customData`, but only fields with CustomDataConfigs become KPI variables.**
+
+```
+SDK customData → CustomDataConfig (Schema) → Context Variable → KPI Formula
+                        ↑
+                  REQUIRED for field
+                  to be usable in KPIs
+```
+
+Fields without CustomDataConfigs:
+- ✅ Are stored in the event record
+- ❌ Cannot be referenced in KPI formulas
+- ❌ Don't appear in formula variable suggestions
+- ❌ Effectively wasted for analytics purposes
+
+### Diagnostic
+
+**1. List what CustomDataConfigs exist:**
+```bash
+olakai custom-data list --json | jq '.[].name'
+```
+
+**2. Compare to what you're sending in SDK:**
+```typescript
+// If you're sending these fields:
+customData: {
+  ItemsProcessed: 10,   // Is there a CustomDataConfig for this?
+  SuccessRate: 0.95,    // Is there a CustomDataConfig for this?
+  RandomField: "xyz",   // Is there a CustomDataConfig for this?
+}
+```
+
+**3. Check for mismatches:**
+- Field sent but no config → Cannot use in KPIs
+- Config exists but field not sent → KPI shows `null`
+
+### Fix
+
+**Create CustomDataConfigs for every field you want to use in KPIs:**
+
+```bash
+# For each field you need in KPIs, create a config
+olakai custom-data create --name "ItemsProcessed" --type NUMBER
+olakai custom-data create --name "SuccessRate" --type NUMBER
+olakai custom-data create --name "RandomField" --type STRING
+
+# Verify
+olakai custom-data list
+```
+
+**Best Practice:** Design your CustomDataConfigs FIRST, then write SDK code that sends only those fields.
+
+### Common Mistakes
+
+| Mistake | Problem | Fix |
+|---------|---------|-----|
+| Sending extra "helpful" fields | They're ignored for KPIs | Only send registered fields |
+| Different casing in SDK vs config | May cause issues | Match exact case |
+| Creating KPI before CustomDataConfig | Formula can't resolve variable | Create config first |
+
+---
+
 ## Issue: KPIs Show `null` Values
 
 ### Symptom
@@ -625,7 +694,25 @@ KPIs showing null?
 ├── CustomDataConfig missing → olakai custom-data create
 └── Type mismatch → NUMBER needs number, STRING needs string
 
+customData field not usable in KPIs?
+├── Check CustomDataConfig exists → olakai custom-data list
+├── Config missing → olakai custom-data create --name "Field" --type NUMBER
+└── Case mismatch → Ensure exact case match between SDK and config
+
 Events not under agent?
 ├── Check app name matches → Compare event.app to agent.name
 ├── Mismatch → Update agent name or SDK app field
 ```
+
+## Key Insight: The customData → KPI Pipeline
+
+Only fields registered as CustomDataConfigs become available in KPI formulas:
+
+```
+SDK customData → CustomDataConfig → Context Variable → KPI Formula → kpiData
+       ↓                ↓                  ↓               ↓            ↓
+  Any JSON         Schema definition   Available var   Expression   Computed value
+                   (REQUIRED)
+```
+
+**Common pitfall:** Sending extra fields in `customData` without CustomDataConfigs - they're stored but unusable for KPIs.
