@@ -13,6 +13,7 @@ These skills follow the [Agent Skills Standard](https://skills.sh) and work with
 npx add-skill olakai-ai/olakai-skills --list
 
 # Install a specific skill
+npx add-skill olakai-ai/olakai-skills/olakai-get-started
 npx add-skill olakai-ai/olakai-skills/olakai-create-agent
 npx add-skill olakai-ai/olakai-skills/olakai-add-monitoring
 npx add-skill olakai-ai/olakai-skills/olakai-troubleshoot
@@ -33,6 +34,7 @@ git clone https://github.com/olakai-ai/olakai-skills .claude/skills/olakai-skill
 
 | Skill | Description |
 |-------|-------------|
+| **olakai-get-started** | Get started with Olakai - account setup, CLI install, authentication, first agent |
 | **olakai-create-agent** | Create a new AI agent with Olakai monitoring from scratch |
 | **olakai-add-monitoring** | Add Olakai monitoring to an existing AI agent or LLM integration |
 | **olakai-troubleshoot** | Troubleshoot monitoring issues - missing events, KPI problems, SDK errors |

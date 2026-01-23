@@ -17,6 +17,8 @@ The repository uses a **dual-directory structure** for compatibility with both t
 ```
 olakai-skills/
 ├── skills/                       # CANONICAL: Agent Skills standard structure
+│   ├── olakai-get-started/
+│   │   └── SKILL.md              # Onboarding: install CLI, auth, first agent (~300 lines)
 │   ├── olakai-create-agent/
 │   │   └── SKILL.md              # Create new agents with monitoring (~540 lines)
 │   ├── olakai-add-monitoring/
@@ -33,6 +35,7 @@ olakai-skills/
 │       ├── agents/
 │       │   └── olakai-expert.md  # Bundled agent combining all skills
 │       └── skills/               # SYMLINKS to root skills/ directory
+│           ├── olakai-get-started -> ../../../skills/olakai-get-started
 │           ├── olakai-create-agent -> ../../../skills/olakai-create-agent
 │           ├── olakai-add-monitoring -> ../../../skills/olakai-add-monitoring
 │           ├── olakai-troubleshoot -> ../../../skills/olakai-troubleshoot
@@ -69,6 +72,7 @@ olakai-skills/
 
 | Skill | Lines | Purpose |
 |-------|-------|---------|
+| `olakai-get-started` | ~300 | Onboarding: account creation, CLI install, auth, first agent |
 | `olakai-create-agent` | ~540 | Build new AI agents from scratch with full observability |
 | `olakai-add-monitoring` | ~680 | Add Olakai to existing working AI code with minimal changes |
 | `olakai-troubleshoot` | ~610 | Diagnose missing events, KPI issues, SDK errors |
@@ -108,6 +112,7 @@ Before answering Olakai-related questions, evaluate whether to load a skill:
 
 | User Intent | Skill to Load | Keywords |
 |-------------|---------------|----------|
+| **Not set up yet** | `olakai-get-started` | get started, setup, install, signup, account, new to olakai |
 | Build new AI agent | `olakai-create-agent` | create, new, build, start, design agent |
 | Add monitoring to existing code | `olakai-add-monitoring` | add, integrate, existing, wrap, instrument |
 | Something not working | `olakai-troubleshoot` | not working, error, missing, wrong, null, debug |
@@ -115,10 +120,12 @@ Before answering Olakai-related questions, evaluate whether to load a skill:
 
 ### Invocation Pattern
 
-1. **EVALUATE**: Does this prompt relate to Olakai? Check for keywords above.
-2. **SELECT**: Match intent to the appropriate skill.
-3. **INVOKE**: Use `Skill("skill-name")` before proceeding.
-4. **EXECUTE**: Follow the skill's instructions.
+1. **CHECK PREREQUISITES FIRST**: Run `which olakai` and `olakai whoami` to detect setup state
+2. **IF NOT SET UP**: Invoke `olakai-get-started` regardless of user intent
+3. **EVALUATE**: Does this prompt relate to Olakai? Check for keywords above.
+4. **SELECT**: Match intent to the appropriate skill.
+5. **INVOKE**: Use `Skill("skill-name")` before proceeding.
+6. **EXECUTE**: Follow the skill's instructions.
 
 ### Always Invoke olakai-expert Agent When:
 
