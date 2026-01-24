@@ -18,7 +18,7 @@ description: >
 license: MIT
 metadata:
   author: olakai
-  version: "1.6.0"
+  version: "1.7.0"
 ---
 
 # Troubleshoot Olakai Agent Monitoring
@@ -408,6 +408,65 @@ olakai custom-data list
 | Sending extra "helpful" fields | They're ignored for KPIs | Only send registered fields |
 | Different casing in SDK vs config | May cause issues | Match exact case |
 | Creating KPI before CustomDataConfig | Formula can't resolve variable | Create config first |
+
+---
+
+## Issue: Redundant customData Fields
+
+### Symptom
+CustomDataConfigs exist for fields that are already tracked by the platform (sessionId, agentId, timestamps, etc.), cluttering the configuration.
+
+### Why This Happens
+The SDK accepts any JSON in customData, so agents sometimes send "helpful" extra data that's already tracked elsewhere.
+
+### What's Already Tracked (Don't Duplicate)
+
+| Field | How It's Tracked | Don't Create Config For |
+|-------|------------------|------------------------|
+| Session ID | SDK automatic grouping | `sessionId`, `session` |
+| Agent ID | API key association | `agentId`, `agent` |
+| User email | `userEmail` parameter | `email`, `userEmail` |
+| Timestamps | Event metadata | `timestamp`, `createdAt` |
+| Token count | `tokens` parameter | `tokenCount`, `totalTokens` |
+| Model | Auto-detected from call | `model`, `modelName` |
+| Provider | Wrapped client config | `provider` |
+
+### Fix
+
+**1. Identify redundant configs:**
+```bash
+olakai custom-data list --json | jq '.[].name'
+```
+
+Look for names like: `sessionId`, `agentId`, `timestamp`, `model`, `provider`, `tokenCount`
+
+**2. Check if they're used in KPIs:**
+```bash
+olakai kpis list --agent-id YOUR_AGENT_ID --json | jq '.[].calculatorParams.formula'
+```
+
+**3. If not used in KPIs, remove from SDK code:**
+Don't delete the configs (they may have historical data), but stop sending these fields.
+
+**4. Update SDK code to only send KPI-relevant fields:**
+```typescript
+customData: {
+  // ✅ Keep: Used in KPI formulas
+  ItemsProcessed: 10,
+  SuccessRate: 1.0,
+
+  // ❌ Remove: Already tracked by platform
+  // sessionId: session.id,      // Already tracked
+  // agentId: agentConfig.id,    // Already tracked
+  // timestamp: Date.now(),      // Already tracked
+}
+```
+
+### Best Practice
+Before creating a CustomDataConfig, ask:
+- "Will I use this in a KPI formula?" → Yes = Create
+- "Will I filter events by this?" → Yes = Create
+- "Is this already tracked by the platform?" → Yes = Don't create
 
 ---
 

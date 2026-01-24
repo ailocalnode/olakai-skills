@@ -16,7 +16,7 @@ description: >
 license: MIT
 metadata:
   author: olakai
-  version: "1.6.0"
+  version: "1.7.0"
 ---
 
 # Olakai Implementation Planning Guide
@@ -116,6 +116,22 @@ olakai activity get EVENT_ID --json | jq '{customData, kpiData}'
 
 Include these in your plan steps. They will NOT be available after context clears.
 
+### Workflow Hierarchy (Required)
+
+**Include this in any step involving agent creation:**
+
+```
+IMPORTANT: Every agent MUST belong to a workflow
+
+1. Create workflow FIRST: olakai workflows create --name "Name"
+2. Create agent with workflow: olakai agents create --workflow WORKFLOW_ID ...
+
+Even single agents need a parent workflow for:
+- Future multi-agent expansion
+- Workflow-level KPI aggregation
+- Proper organizational hierarchy
+```
+
 ### The customData → KPI Pipeline
 
 **Include this explanation in any step involving KPIs or customData:**
@@ -130,6 +146,13 @@ Key rules:
 2. But ONLY CustomDataConfig fields become KPI variables
 3. Create CustomDataConfigs FIRST, then write SDK code
 4. Field names in SDK must EXACTLY match CustomDataConfig names
+
+What NOT to send in customData (already tracked):
+- sessionId, agentId (automatic)
+- userEmail (use parameter instead)
+- timestamp, tokens, model, provider (automatic)
+
+Only send: KPI variables + fields for filtering/grouping
 ```
 
 ### SDK Quick Reference - TypeScript

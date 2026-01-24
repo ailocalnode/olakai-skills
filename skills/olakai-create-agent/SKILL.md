@@ -19,7 +19,7 @@ description: >
 license: MIT
 metadata:
   author: olakai
-  version: "1.6.0"
+  version: "1.7.0"
 ---
 
 # Create AI Agent with Olakai Monitoring
@@ -140,15 +140,73 @@ customData: {
 > ⚠️ **IMPORTANT**: Only include fields you will register as CustomDataConfigs.
 > Unregistered fields are stored but **cannot be used in KPIs** - they're effectively wasted data.
 
+### What NOT to Include in customData
+
+The Olakai platform automatically tracks these fields - do NOT duplicate them in customData:
+
+| Already Tracked | Where | Don't Send As customData |
+|-----------------|-------|--------------------------|
+| Session ID | Main payload | ❌ `sessionId` |
+| Agent ID | API key association | ❌ `agentId` |
+| User email | `userEmail` parameter | ❌ `email`, `userEmail` |
+| Timestamp | Event metadata | ❌ `timestamp`, `createdAt` |
+| Request time | `requestTime` parameter | ❌ `duration`, `latency` |
+| Token count | `tokens` parameter | ❌ `tokenCount`, `totalTokens` |
+| Model | Auto-detected | ❌ `model`, `modelName` |
+| Provider | Wrapped client config | ❌ `provider` |
+
+**customData is ONLY for:**
+1. **KPI variables** - Fields you'll use in formula calculations (e.g., `ItemsProcessed`, `SuccessRate`)
+2. **Tagging/filtering** - Fields you'll filter by in queries (e.g., `Department`, `ProjectId`)
+
+**❌ BAD: Sending redundant data**
+```typescript
+customData: {
+  sessionId: session.id,       // ❌ Already tracked
+  agentId: agentConfig.id,     // ❌ Already tracked
+  userEmail: user.email,       // ❌ Pass via userEmail param instead
+  timestamp: Date.now(),       // ❌ Already tracked
+  ItemsProcessed: 10,          // ✅ Needed for KPI
+}
+```
+
+**✅ GOOD: Only KPI-relevant data**
+```typescript
+customData: {
+  ItemsProcessed: 10,          // ✅ Used in KPI formula
+  SuccessRate: 1.0,            // ✅ Used in KPI formula
+  ExecutionId: uuid,           // ✅ For correlation/filtering
+}
+```
+
 ## Step 2: Configure Olakai Platform
 
-### 2.1 Create the Agent in Olakai
+### 2.1 Create a Workflow (Required)
+
+> ⚠️ **Every agent MUST belong to a workflow**, even if it's the only agent in that workflow.
+
+**Why workflows are required:**
+- Enable future multi-agent expansion without restructuring
+- Provide workflow-level aggregation for KPIs
+- Establish proper organizational hierarchy
+- Support workflow-level governance policies
 
 ```bash
-# Create the agent with an API key for SDK integration
+# Create the workflow first
+olakai workflows create --name "Your Workflow Name" --json
+
+# Save the workflow ID for agent association
+# Output: { "id": "wfl_xxx...", "name": "Your Workflow Name" }
+```
+
+### 2.2 Create the Agent in Olakai
+
+```bash
+# Create the agent associated with the workflow
 olakai agents create \
   --name "Your Agent Name" \
   --description "What this agent does" \
+  --workflow WORKFLOW_ID \
   --with-api-key \
   --json
 
@@ -156,6 +214,7 @@ olakai agents create \
 # {
 #   "id": "cmkbteqn501kyjy4yu6p6xrrx",
 #   "name": "Your Agent Name",
+#   "workflowId": "wfl_xxx...",
 #   "apiKey": "sk_agent_xxxxx..."   <-- Use this in your SDK
 # }
 
@@ -163,10 +222,25 @@ olakai agents create \
 olakai agents get AGENT_ID --json | jq '.apiKey'
 ```
 
-### 2.2 Create Custom Data Configurations (BEFORE Writing SDK Code)
+**Workflow → Agent Hierarchy:**
+```
+Workflow: "Customer Support Pipeline"
+├── Agent: "Ticket Classifier"
+├── Agent: "Response Generator"
+└── Agent: "Quality Checker"
+
+Workflow: "Document Processing"
+└── Agent: "Document Summarizer"  ← Even single agents need a workflow
+```
+
+### 2.3 Create Custom Data Configurations (BEFORE Writing SDK Code)
 
 > ⚠️ **This step MUST be completed before Step 3 (SDK Integration).**
 > Only fields registered here can be used in KPI formulas. Design the schema first, then code to it.
+
+> ⚠️ **ONLY create configs for data you'll use in KPIs or for filtering.**
+> Don't create configs for data already tracked (sessionId, timestamps, tokens) or "nice to have" fields.
+> Each config should answer: "Will I use this in a KPI formula?" or "Will I filter/group by this?"
 
 For each custom metric from Step 1.2, create a CustomDataConfig:
 
@@ -188,7 +262,7 @@ olakai custom-data list
 - ✅ Values sent in SDK `customData` with these names are processed
 - ❌ Any `customData` field NOT listed here is ignored for KPI purposes
 
-### 2.3 Create KPI Definitions
+### 2.4 Create KPI Definitions
 
 Define KPIs that use your custom data:
 
@@ -222,18 +296,6 @@ olakai kpis create \
 
 # Validate formulas before creating
 olakai kpis validate --formula "ItemsProcessed" --agent-id YOUR_AGENT_ID
-```
-
-### 2.4 Optionally Create a Workflow
-
-If your agent is part of a larger workflow with multiple agents:
-
-```bash
-# Create workflow
-olakai workflows create --name "My Workflow Name"
-
-# Associate agent with workflow
-olakai agents update YOUR_AGENT_ID --workflow WORKFLOW_ID
 ```
 
 ## Step 3: Implement SDK Integration

@@ -19,7 +19,7 @@ description: >
 license: MIT
 metadata:
   author: olakai
-  version: "1.6.0"
+  version: "1.7.0"
 ---
 
 # Add Olakai Monitoring to Existing Agent
@@ -260,6 +260,11 @@ with olakai_context(
 
 > ⚠️ **IMPORTANT**: Only send fields you've registered as CustomDataConfigs (Step 5.3). Unregistered fields are stored but **cannot be used in KPIs**.
 
+> ⚠️ **Only send data you'll use in KPIs or for filtering.** Don't duplicate fields already tracked by the platform:
+> - Session ID, Agent ID (automatic)
+> - User email (use `userEmail` parameter)
+> - Timestamps, token count, model, provider (automatic)
+
 TypeScript:
 ```typescript
 const response = await openai.chat.completions.create(
@@ -366,11 +371,29 @@ olakai login
 
 #### 5.2 Register Your Agent
 ```bash
-# Create agent entry
-olakai agents create --name "Document Processor" --description "Processes and summarizes documents" --with-api-key
+# Create agent entry (associate with a workflow)
+olakai agents create --name "Document Processor" --description "Processes and summarizes documents" --workflow WORKFLOW_ID --with-api-key
 
 # Note the agent ID returned
 ```
+
+#### 5.2.1 Ensure Agent Has a Workflow
+
+> ⚠️ **Every agent MUST belong to a workflow**, even if it's the only agent.
+
+```bash
+# Check if agent has a workflow
+olakai agents get YOUR_AGENT_ID --json | jq '.workflowId'
+
+# If null, create a workflow and associate:
+olakai workflows create --name "Your Workflow Name" --json
+olakai agents update YOUR_AGENT_ID --workflow WORKFLOW_ID
+```
+
+**Why workflows matter:**
+- Enable future multi-agent expansion
+- Provide workflow-level KPI aggregation
+- Establish proper organizational hierarchy
 
 #### 5.3 Create Custom Data Configs FIRST
 

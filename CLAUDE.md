@@ -106,6 +106,50 @@ This pattern MUST be preserved across all skills.
 
 ---
 
+## Workflow Hierarchy Principle
+
+**Every agent MUST belong to a workflow**, even single agents.
+
+```
+Workflow (required container)
+└── Agent(s)
+```
+
+**Why:**
+- Enables future multi-agent expansion
+- Provides workflow-level KPI aggregation
+- Establishes proper organizational hierarchy
+- Supports workflow-level governance
+
+**When creating agents, always:**
+1. Create workflow first: `olakai workflows create --name "Name"`
+2. Associate agent: `olakai agents create --workflow WORKFLOW_ID ...`
+
+---
+
+## customData Purpose and Restrictions
+
+**customData is ONLY for:**
+1. KPI variables (fields used in formula calculations)
+2. Tagging/filtering (fields used to query/group events)
+
+**DO NOT send in customData:**
+| Field Type | Already Tracked By | Don't Duplicate |
+|------------|-------------------|-----------------|
+| Session ID | SDK automatic | ❌ sessionId |
+| Agent ID | API key | ❌ agentId |
+| User email | userEmail param | ❌ email |
+| Timestamps | Event metadata | ❌ timestamp |
+| Token count | tokens param | ❌ tokenCount |
+| Model/Provider | Auto-detected | ❌ model, provider |
+
+**Before creating a CustomDataConfig, ask:**
+- "Will I use this in a KPI formula?" → Yes → Create it
+- "Will I filter/group by this?" → Yes → Create it
+- Neither → Don't create it
+
+---
+
 ## Critical Concept: customData → KPI Pipeline
 
 **This is the most important concept to convey to users.** Understanding this pipeline prevents most integration issues.
