@@ -16,7 +16,7 @@ description: >
 license: MIT
 metadata:
   author: olakai
-  version: "1.7.0"
+  version: "1.8.0"
 ---
 
 # Olakai Implementation Planning Guide
@@ -146,6 +146,9 @@ Key rules:
 2. But ONLY CustomDataConfig fields become KPI variables
 3. Create CustomDataConfigs FIRST, then write SDK code
 4. Field names in SDK must EXACTLY match CustomDataConfig names
+5. KPIs are UNIQUE PER AGENT — each KPI belongs to one agent only
+6. If multiple agents need the same KPI, create it separately for each
+7. CustomDataConfigs are account-level (shared), but KPIs are agent-level (NOT shared)
 
 What NOT to send in customData (already tracked):
 - sessionId, agentId (automatic)
@@ -245,13 +248,13 @@ olakai agents get AGENT_ID [--json]
 olakai activity list [--limit N] [--agent-id ID] [--json]
 olakai activity get EVENT_ID [--json]
 
-# KPIs (always require --agent-id)
+# KPIs (agent-specific: each KPI belongs to ONE agent, cannot be shared)
 olakai kpis list --agent-id ID [--json]
 olakai kpis create --name "Name" --formula "X" --agent-id ID
 olakai kpis validate --formula "X" --agent-id ID
 olakai kpis update KPI_ID --formula "X"
 
-# CustomData (account-level, not agent-specific)
+# CustomData (account-level: shared across ALL agents, unlike KPIs)
 olakai custom-data list [--json]
 olakai custom-data create --name "Name" --type NUMBER|STRING
 ```

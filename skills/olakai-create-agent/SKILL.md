@@ -19,7 +19,7 @@ description: >
 license: MIT
 metadata:
   author: olakai
-  version: "1.7.0"
+  version: "1.8.0"
 ---
 
 # Create AI Agent with Olakai Monitoring
@@ -50,6 +50,8 @@ Olakai's core value is **tracking business-specific KPIs for your AI agents**. W
 
 > ⚠️ **Every agent should have 2-4 KPIs that answer: "How do I know this agent is performing well?"**
 
+> ⚠️ **KPIs created here belong to this specific agent only.** If you later create additional agents, each one needs its own KPI definitions — KPIs cannot be shared or reused across agents.
+
 ## Understanding the customData → KPI Pipeline
 
 Before diving into implementation, understand how data flows through Olakai:
@@ -73,6 +75,7 @@ SDK customData → CustomDataConfig (Schema) → Context Variable → KPI Formul
 | Only CustomDataConfig fields become variables | Unregistered customData fields are NOT usable in KPIs |
 | Formula evaluation is case-insensitive | `stepCount`, `STEPCOUNT`, `StepCount` all work in formulas |
 | NUMBER configs need numeric values | Don't send `"5"` (string), send `5` (number) |
+| KPIs are unique per agent | Each KPI belongs to exactly one agent — create separately for each, even with identical formulas |
 
 ### Built-in Context Variables (Always Available)
 
@@ -263,6 +266,8 @@ olakai custom-data list
 - ❌ Any `customData` field NOT listed here is ignored for KPI purposes
 
 ### 2.4 Create KPI Definitions
+
+> ⚠️ **KPIs are created for THIS agent only.** Unlike CustomDataConfigs (account-level, shared across all agents), each KPI is bound to one agent. Do NOT reuse KPI IDs from another agent — if multiple agents need the same metric, create the KPI separately for each.
 
 Define KPIs that use your custom data:
 

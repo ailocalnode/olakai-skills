@@ -18,7 +18,7 @@ description: >
 license: MIT
 metadata:
   author: olakai
-  version: "1.7.0"
+  version: "1.8.0"
 ---
 
 # Troubleshoot Olakai Agent Monitoring
@@ -411,6 +411,65 @@ olakai custom-data list
 
 ---
 
+## Issue: KPIs from Another Agent Not Working
+
+### Symptom
+
+You created KPIs for one agent and expected them to apply to a different agent. The second agent's events show no `kpiData`, or `olakai kpis list --agent-id SECOND_AGENT_ID` returns an empty list.
+
+### Root Cause
+
+**KPIs are unique per agent.** Each KPI definition is bound to exactly one agent by its `agentId`. KPIs cannot be shared, inherited, or reused across agents — even within the same workflow or account.
+
+| Concept | Scope | Shared Across Agents? |
+|---------|-------|-----------------------|
+| **CustomDataConfig** | Account-level | ✅ Yes — created once, available to all agents |
+| **KPI** | Agent-level | ❌ No — belongs to one agent only |
+
+### Diagnostic
+
+```bash
+# Check KPIs on the FIRST agent (where they were originally created)
+olakai kpis list --agent-id AGENT_A_ID --json | jq '.[].name'
+# Output: "Items Processed", "Success Rate"
+
+# Check KPIs on the SECOND agent (where you expected them to work)
+olakai kpis list --agent-id AGENT_B_ID --json | jq '.[].name'
+# Output: (empty) ← KPIs don't carry over
+```
+
+### Fix
+
+Create the KPIs separately for the second agent:
+
+```bash
+# Recreate each KPI for the new agent
+olakai kpis create \
+  --name "Items Processed" \
+  --agent-id AGENT_B_ID \
+  --calculator-id formula \
+  --formula "ItemsProcessed" \
+  --aggregation SUM
+
+olakai kpis create \
+  --name "Success Rate" \
+  --agent-id AGENT_B_ID \
+  --calculator-id formula \
+  --formula "SuccessRate * 100" \
+  --aggregation AVERAGE
+```
+
+### Prevention
+
+When creating a new agent, always:
+1. Check if KPIs are needed: "Does this agent need performance metrics?"
+2. Create KPIs explicitly for the new agent — don't assume they exist from another agent
+3. Verify with `olakai kpis list --agent-id NEW_AGENT_ID`
+
+> **Note:** CustomDataConfigs do NOT need to be recreated — they are account-level and shared. Only KPIs are agent-specific.
+
+---
+
 ## Issue: Redundant customData Fields
 
 ### Symptom
@@ -761,6 +820,12 @@ customData field not usable in KPIs?
 Events not under agent?
 ├── Check app name matches → Compare event.app to agent.name
 ├── Mismatch → Update agent name or SDK app field
+
+KPIs not appearing on new agent?
+├── KPIs are agent-specific, NOT shared across agents
+├── Check KPIs exist for THIS agent → olakai kpis list --agent-id THIS_AGENT_ID
+├── If empty → Create KPIs for this agent (can't reuse from other agents)
+└── CustomDataConfigs ARE shared → no need to recreate those
 ```
 
 ## Key Insight: The customData → KPI Pipeline

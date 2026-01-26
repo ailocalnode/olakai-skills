@@ -16,7 +16,7 @@ description: >
 license: MIT
 metadata:
   author: olakai
-  version: "1.7.0"
+  version: "1.8.0"
 ---
 
 # Get Started with Olakai
@@ -352,6 +352,8 @@ olakai kpis create \
   --formula "IF(Priority == 1, 1, 0)" \
   --aggregation SUM
 ```
+
+> **Note:** KPIs are created per-agent. If you later create additional agents, you'll need to create KPIs for each one separately — they can't be shared across agents. CustomDataConfigs, on the other hand, are account-level and shared.
 
 ### Learn More
 

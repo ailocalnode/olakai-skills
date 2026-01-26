@@ -19,7 +19,7 @@ description: >
 license: MIT
 metadata:
   author: olakai
-  version: "1.7.0"
+  version: "1.8.0"
 ---
 
 # Add Olakai Monitoring to Existing Agent
@@ -54,6 +54,8 @@ Adding monitoring is only the first step. **The real value of Olakai comes from 
 - ✅ Business value calculations
 
 > ⚠️ **Plan to configure at least 2-4 KPIs** that answer: "How do I know this agent is performing well?"
+
+> ⚠️ **KPIs are unique per agent.** If adding monitoring to an agent that needs the same KPIs as another already-configured agent, you must still create new KPI definitions for this agent. KPIs cannot be shared or reused across agents.
 
 ## Understanding the customData → KPI Pipeline
 
@@ -416,6 +418,9 @@ olakai custom-data list
 - ❌ Any `customData` field NOT listed here is ignored for KPI purposes
 
 #### 5.4 Create KPIs
+
+> ⚠️ **Create KPIs for THIS agent specifically.** KPIs are bound to a single agent and are not shared like CustomDataConfigs. Even if another agent has identical KPIs, you must create them again here with this agent's ID.
+
 ```bash
 olakai kpis create \
   --name "Documents Processed" \

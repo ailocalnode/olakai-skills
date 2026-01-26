@@ -189,6 +189,17 @@ When implementing agents, coding assistants often:
 3. **Create KPIs** - `olakai kpis create --formula "X" --agent-id ID`
 4. **THEN write SDK code** - Send only registered fields in customData
 
+### Scoping: CustomDataConfigs vs KPIs
+
+| Aspect | CustomDataConfig | KPI |
+|--------|-----------------|-----|
+| **Scope** | Account-level | Agent-level |
+| **Sharing** | Shared across all agents | Unique to one agent |
+| **Creation** | Create once, available everywhere | Create separately for each agent |
+| **CLI flag** | No `--agent-id` needed | `--agent-id` required |
+
+CustomDataConfigs define the schema for fields your SDK sends — they are created once per account and apply to all agents. KPIs, however, are **bound to a single agent**. Even if two agents need the same KPI formula, you must create the KPI separately for each agent using `olakai kpis create --agent-id EACH_AGENT_ID`.
+
 ---
 
 ## KPIs Are Mandatory, Not Optional
@@ -205,6 +216,12 @@ When implementing agents, coding assistants often:
 |------------|--------------|
 | **Agentic (workflows)** | Items processed, success rate, step efficiency, error count |
 | **Assistive (chatbots)** | Response quality, resolution rate, user satisfaction |
+
+### KPIs Are Unique Per Agent
+
+> ⚠️ **KPIs are unique per agent.** Each KPI definition belongs to exactly one agent and cannot be shared or reused across agents. If multiple agents need the same KPI, create it separately for each using `olakai kpis create --agent-id EACH_AGENT_ID`. This is unlike CustomDataConfigs, which are account-level and shared.
+
+The `--agent-id` flag on all KPI commands (`kpis list`, `kpis create`, `kpis validate`) is not optional — it reflects the architectural binding of KPIs to individual agents. There is no way to create a "global" KPI that applies to multiple agents.
 
 ---
 

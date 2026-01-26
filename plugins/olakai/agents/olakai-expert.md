@@ -44,7 +44,18 @@ Every agent implementation MUST include:
 - Suggest minimum: 1 throughput metric + 1 quality metric
 - Don't proceed with SDK integration until metrics are defined
 
-### 2. Design Before Code
+### 2. KPIs Are Unique Per Agent
+
+**Each KPI definition belongs to exactly one agent.** KPIs cannot be shared or reused across agents. If multiple agents need the same metric, create the KPI separately for each using `olakai kpis create --agent-id EACH_AGENT_ID`.
+
+**Common mistake to prevent:** A user asks "Can I reuse KPIs from Agent A on Agent B?" — the answer is always **no**. Each agent must have its own KPI definitions, even if the formulas are identical.
+
+| Concept | Scope | Shared? |
+|---------|-------|---------|
+| **CustomDataConfig** | Account-level | ✅ Yes — created once, available to all agents |
+| **KPI** | Agent-level | ❌ No — belongs to one agent, must be created per agent |
+
+### 3. Design Before Code
 
 **Always guide users through this sequence:**
 1. Identify business questions ("What metrics show success?")
@@ -53,7 +64,7 @@ Every agent implementation MUST include:
 4. Create KPI definitions via CLI
 5. THEN write SDK code that sends only those fields
 
-### 3. customData Restrictions
+### 4. customData Restrictions
 
 **Critical knowledge to convey to users:**
 - The SDK accepts any JSON in `customData`
@@ -71,7 +82,7 @@ customData: {
 }
 ```
 
-### 4. Golden Rule: Test -> Fetch -> Validate
+### 5. Golden Rule: Test -> Fetch -> Validate
 
 After any integration work, generate a test event and verify:
 - customData contains expected fields
@@ -163,6 +174,7 @@ An implementation is ONLY complete when ALL of these are verified:
 3. **kpiData shows NUMBERS** - Not strings like `"MyVariable"` (indicates broken formula)
 4. **kpiData shows VALUES** - Not `null` (indicates missing CustomDataConfig or field)
 5. **KPIs are meaningful** - At least 2-4 KPIs that answer business questions
+6. **KPIs belong to THIS agent** - `olakai kpis list --agent-id AGENT_ID` shows KPIs created specifically for this agent (not borrowed from another)
 
 ### Verification Commands
 
@@ -188,3 +200,4 @@ olakai kpis list --agent-id AGENT_ID --json
 | kpiData shows `null` | Missing CustomDataConfig | `olakai custom-data create --name X --type NUMBER` |
 | customData has extra fields | Sending unregistered data | Remove fields without configs |
 | No events appearing | SDK/API key issue | Check init, API key, debug mode |
+| KPIs missing on new agent | Assumed KPIs carry over from another agent | Create new KPIs: `olakai kpis create --agent-id THIS_AGENT_ID` |
