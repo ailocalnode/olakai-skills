@@ -360,11 +360,16 @@ const response = await openai.chat.completions.create({
 ```
 
 **Agentic workflow with manual event tracking:**
+
+> **`taskExecutionId` — Cross-Agent Task Correlation**
+>
+> Generate ONE `taskExecutionId` per task and share it across all agents in a multi-agent workflow. This is how Olakai links work done by different agents into a single logical task for analytics. Without it, each agent's events are isolated by session and you lose visibility into the full end-to-end task. The orchestrator should generate the ID and pass it to every agent it invokes.
+
 ```typescript
 async function runAgent(input: string): Promise<string> {
   const startTime = Date.now();
   const executionId = crypto.randomUUID();
-  const taskExecutionId = crypto.randomUUID(); // Group all events in this run
+  const taskExecutionId = crypto.randomUUID(); // Share across all agents in a multi-agent workflow
   let totalTokens = 0;
   let stepCount = 0;
   let itemsProcessed = 0;
@@ -407,7 +412,7 @@ async function runAgent(input: string): Promise<string> {
       response: finalResponse,
       tokens: totalTokens,
       requestTime: Date.now() - startTime,
-      taskExecutionId,  // Groups all events from this run
+      taskExecutionId,  // Links events across agents in the same task
       task: "Data Processing & Analysis",
       customData: {
         // Only include fields registered in Step 2.2
@@ -477,7 +482,7 @@ import uuid
 def run_agent(input_text: str) -> str:
     start_time = time.time()
     execution_id = str(uuid.uuid4())
-    task_execution_id = str(uuid.uuid4())  # Group all events in this run
+    task_execution_id = str(uuid.uuid4())  # Share across all agents in a multi-agent workflow
     total_tokens = 0
     step_count = 0
     items_processed = 0

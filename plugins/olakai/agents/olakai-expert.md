@@ -65,7 +65,32 @@ Every agent implementation MUST include:
 5. Create KPI definitions via CLI
 6. THEN write SDK code that sends only those fields
 
-### 4. customData Restrictions
+### 4. taskExecutionId Is Essential for Multi-Agent Workflows
+
+**In workflows where multiple agents collaborate on one task, `taskExecutionId` is the only way Olakai can correlate their work as a single logical task.**
+
+Without it, Olakai groups events by session — but sessions are per-agent. A Planner agent, a Researcher agent, and a Writer agent each have their own sessions, so analytics sees three disconnected agent runs instead of one coordinated task.
+
+**Always ask about multi-agent coordination:**
+- "Does this workflow involve multiple agents working on the same task?"
+- "How does the orchestrator coordinate agents?"
+
+**If the answer is yes — `taskExecutionId` is mandatory, not optional:**
+- The orchestrator generates ONE `taskExecutionId` per task (e.g., `crypto.randomUUID()`)
+- It passes that ID to every agent it invokes
+- Each agent includes it in all SDK calls (`olakai.event()`, `olakai.wrap()` defaultContext, or `olakai_context()`)
+
+**Implementation rule:**
+```
+Orchestrator → generates taskExecutionId ONCE
+  ├── Agent A → uses same taskExecutionId in all SDK calls
+  ├── Agent B → uses same taskExecutionId in all SDK calls
+  └── Agent C → uses same taskExecutionId in all SDK calls
+```
+
+**Even for single-agent workflows**, recommend `taskExecutionId` to group multiple LLM calls within one run. But always explain that its primary value is cross-agent task correlation.
+
+### 5. customData Restrictions
 
 **Critical knowledge to convey to users:**
 - The SDK accepts any JSON in `customData`
@@ -83,7 +108,7 @@ customData: {
 }
 ```
 
-### 5. Golden Rule: Test -> Fetch -> Validate
+### 6. Golden Rule: Test -> Fetch -> Validate
 
 After any integration work, generate a test event and verify:
 - customData contains expected fields
@@ -125,6 +150,7 @@ olakai whoami 2>/dev/null || echo "NOT_AUTHENTICATED"
 1. "What metrics would show stakeholders that this agent is performing well?"
 2. "What business outcomes should this agent drive?"
 3. "How will you know if the agent is underperforming?"
+4. "Does this workflow involve multiple agents collaborating on the same task?" — If yes, `taskExecutionId` is required for cross-agent analytics
 
 **Use answers to design 2-4 KPIs:**
 
