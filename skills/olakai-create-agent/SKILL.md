@@ -271,6 +271,21 @@ olakai custom-data list --agent-id YOUR_AGENT_ID
 
 > ⚠️ **Both CustomDataConfigs and KPIs are created for THIS agent only.** Each config is bound to one agent. If multiple agents need the same fields, create the CustomDataConfig and KPI separately for each agent.
 
+#### Quick Start with Templates
+
+Instead of writing KPI formulas from scratch, you can use predefined templates via the dashboard UI:
+
+1. Navigate to your agent's KPI settings in the Olakai dashboard
+2. Click **Create KPI** → **Use Template**
+3. Choose a template:
+   - **Sentiment Scorer** — Analyzes session sentiment on a configurable scale
+   - **Time Saved Estimator** — Estimates minutes saved vs. manual execution
+4. Templates work at the session scope — they analyze the entire conversation/workflow run
+
+Templates are a great starting point. You can always add custom formula-based KPIs alongside them.
+
+#### Custom Formula KPIs
+
 Define KPIs that use your custom data:
 
 ```bash
@@ -349,6 +364,7 @@ const response = await openai.chat.completions.create({
 async function runAgent(input: string): Promise<string> {
   const startTime = Date.now();
   const executionId = crypto.randomUUID();
+  const taskExecutionId = crypto.randomUUID(); // Group all events in this run
   let totalTokens = 0;
   let stepCount = 0;
   let itemsProcessed = 0;
@@ -391,6 +407,7 @@ async function runAgent(input: string): Promise<string> {
       response: finalResponse,
       tokens: totalTokens,
       requestTime: Date.now() - startTime,
+      taskExecutionId,  // Groups all events from this run
       task: "Data Processing & Analysis",
       customData: {
         // Only include fields registered in Step 2.2
@@ -410,6 +427,7 @@ async function runAgent(input: string): Promise<string> {
       response: `Error: ${error instanceof Error ? error.message : "Unknown"}`,
       tokens: totalTokens,
       requestTime: Date.now() - startTime,
+      taskExecutionId,
       task: "Data Processing & Analysis",
       customData: {
         ExecutionId: executionId,
@@ -459,6 +477,7 @@ import uuid
 def run_agent(input_text: str) -> str:
     start_time = time.time()
     execution_id = str(uuid.uuid4())
+    task_execution_id = str(uuid.uuid4())  # Group all events in this run
     total_tokens = 0
     step_count = 0
     items_processed = 0
@@ -481,6 +500,7 @@ def run_agent(input_text: str) -> str:
             response=final_response,
             tokens=total_tokens,
             requestTime=int((time.time() - start_time) * 1000),
+            taskExecutionId=task_execution_id,
             task="Data Processing & Analysis",
             customData={
                 "ExecutionId": execution_id,
@@ -499,6 +519,7 @@ def run_agent(input_text: str) -> str:
             response=f"Error: {str(e)}",
             tokens=total_tokens,
             requestTime=int((time.time() - start_time) * 1000),
+            taskExecutionId=task_execution_id,
             task="Data Processing & Analysis",
             customData={
                 "ExecutionId": execution_id,

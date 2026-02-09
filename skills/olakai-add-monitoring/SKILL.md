@@ -340,6 +340,7 @@ async function processDocument(doc: Document): Promise<ProcessingResult> {
     response: result,
     tokens: totalTokens,
     requestTime: Date.now() - startTime,
+    taskExecutionId: crypto.randomUUID(), // Group related events
     task: "Data Processing & Analysis",
     customData: {
       // Only registered fields - see Step 5.3
@@ -815,6 +816,7 @@ olakai.event({
   response: "output",
   tokens: 1500,
   requestTime: 5000,
+  taskExecutionId: "uuid-to-group-events", // Optional: group related events
   task: "Data Processing & Analysis",
   customData: { workflowId: "abc" }
 });
@@ -825,8 +827,8 @@ olakai.event({
 olakai_config(api_key)
 instrument_openai()
 
-# Context for calls
-with olakai_context(userEmail="user@example.com", task="Support"):
+# Context for calls (taskExecutionId groups events in a run)
+with olakai_context(userEmail="user@example.com", taskExecutionId="uuid", task="Support"):
     response = client.chat.completions.create(...)
 
 # Manual event

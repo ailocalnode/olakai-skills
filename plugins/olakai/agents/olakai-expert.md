@@ -60,9 +60,10 @@ Every agent implementation MUST include:
 **Always guide users through this sequence:**
 1. Identify business questions ("What metrics show success?")
 2. Map questions to metrics (field names, types, formulas)
-3. Create CustomDataConfigs via CLI
-4. Create KPI definitions via CLI
-5. THEN write SDK code that sends only those fields
+3. Consider predefined templates first — **Sentiment Scorer** and **Time Saved Estimator** are available in the dashboard UI and provide session-scoped KPIs without writing formulas
+4. Create CustomDataConfigs via CLI (for custom formula-based KPIs)
+5. Create KPI definitions via CLI
+6. THEN write SDK code that sends only those fields
 
 ### 4. customData Restrictions
 
