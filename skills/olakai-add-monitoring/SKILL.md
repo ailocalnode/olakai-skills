@@ -300,7 +300,9 @@ with olakai_context(
 
 ### Step 4: Handle Agentic Workflows
 
-If your agent makes multiple LLM calls per task, aggregate them into a single event:
+If your agent makes multiple LLM calls per task, aggregate them into a single event.
+
+> **`taskExecutionId` — Critical for multi-agent workflows.** If multiple agents collaborate on the same task (e.g., a Planner, Researcher, and Writer), the orchestrator must generate ONE `taskExecutionId` and pass it to all agents. This is how Olakai correlates cross-agent work as a single logical task. Without it, analytics can only group by session (per-agent), losing the full picture of multidisciplinary tasks.
 
 ```typescript
 async function processDocument(doc: Document): Promise<ProcessingResult> {
@@ -340,6 +342,7 @@ async function processDocument(doc: Document): Promise<ProcessingResult> {
     response: result,
     tokens: totalTokens,
     requestTime: Date.now() - startTime,
+    taskExecutionId: crypto.randomUUID(), // Share across agents for cross-agent task analytics
     task: "Data Processing & Analysis",
     customData: {
       // Only registered fields - see Step 5.3
@@ -815,6 +818,7 @@ olakai.event({
   response: "output",
   tokens: 1500,
   requestTime: 5000,
+  taskExecutionId: "uuid-shared-across-agents", // Correlates events across agents in a multi-agent task
   task: "Data Processing & Analysis",
   customData: { workflowId: "abc" }
 });
@@ -825,8 +829,8 @@ olakai.event({
 olakai_config(api_key)
 instrument_openai()
 
-# Context for calls
-with olakai_context(userEmail="user@example.com", task="Support"):
+# Context for calls (taskExecutionId links events across agents in a task)
+with olakai_context(userEmail="user@example.com", taskExecutionId="uuid-from-orchestrator", task="Support"):
     response = client.chat.completions.create(...)
 
 # Manual event
