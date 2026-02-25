@@ -273,14 +273,34 @@ olakai custom-data list --agent-id YOUR_AGENT_ID
 
 #### Quick Start with Templates
 
-Instead of writing KPI formulas from scratch, you can use predefined templates via the dashboard UI:
+Instead of writing KPI formulas from scratch, you can use predefined classifier templates via the CLI or the dashboard UI.
+
+**List available templates:**
+```bash
+olakai kpis templates
+```
+
+**Create a classifier KPI from a template:**
+```bash
+# Create a classifier KPI using a pre-built template
+olakai kpis create --name "User Satisfaction" \
+  --calculator-id classifier --template-id sentiment_scorer \
+  --scope CHAT --agent-id $AGENT_ID
+
+# Create a time-saved estimator
+olakai kpis create --name "Time Saved" \
+  --calculator-id classifier --template-id time_saved_estimator \
+  --scope CHAT --agent-id $AGENT_ID
+```
+
+**Or via the dashboard UI:**
 
 1. Navigate to your agent's KPI settings in the Olakai dashboard
 2. Click **Create KPI** → **Use Template**
 3. Choose a template:
    - **Sentiment Scorer** — Analyzes session sentiment on a configurable scale
    - **Time Saved Estimator** — Estimates minutes saved vs. manual execution
-4. Templates work at the session scope — they analyze the entire conversation/workflow run
+4. Templates work at the CHAT scope — they analyze the entire conversation/workflow run
 
 Templates are a great starting point. You can always add custom formula-based KPIs alongside them.
 

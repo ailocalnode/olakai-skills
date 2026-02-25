@@ -593,6 +593,68 @@ Old events won't recalculate. Generate a new event to verify the fix.
 
 ---
 
+## Issue: Classifier KPI Shows Null or Not Updating
+
+### Symptom
+
+A classifier KPI (created from a template like `sentiment_scorer` or `time_saved_estimator`) shows `null` values or does not update after events are sent.
+
+### Root Cause Options
+
+1. **Chat has too few turns** — CHAT-scoped classifier KPIs need the conversation (session) to have enough turns before the classifier can produce a meaningful result.
+2. **Chat decoration has not run yet** — Classifier KPIs run during chat decoration, which happens after the conversation is completed or after a delay (not on every individual event).
+3. **Missing sessionId** — Events are not grouped into a conversation because `sessionId` is not being passed, so there is no chat to decorate.
+
+### Diagnostic Steps
+
+**1. Check the KPI scope**
+
+```bash
+olakai kpis list --agent-id YOUR_AGENT_ID --json | jq '.[] | {name, scope, calculatorId}'
+```
+
+Classifier KPIs should have `"scope": "CHAT"` and `"calculatorId": "classifier"`.
+
+**2. Verify events have a sessionId**
+
+```bash
+olakai activity list --agent-id YOUR_AGENT_ID --limit 5 --json | jq '.prompts[] | {id, sessionId}'
+```
+
+If `sessionId` is null or different for each event, the platform cannot group them into a conversation for decoration.
+
+**3. Wait for chat decoration**
+
+Chat decoration (which triggers classifier evaluation) runs after a conversation is considered complete or after a processing delay. If you just sent events, wait a few minutes and check again.
+
+### Fix
+
+**1. Ensure SDK sends a consistent sessionId:**
+
+```typescript
+// All turns in the same conversation must share a sessionId
+olakai.event({
+  prompt: userMessage,
+  response: aiResponse,
+  sessionId: conversationId,  // Same ID for all turns in this conversation
+  userEmail: user.email,
+});
+```
+
+**2. Ensure the conversation has enough data:**
+
+Classifier KPIs analyze the full conversation context. A single-turn chat may not produce useful results for sentiment analysis. Send at least 2-3 turns before expecting a value.
+
+**3. Check that the template exists:**
+
+```bash
+olakai kpis templates
+```
+
+Verify the `template-id` you used when creating the KPI is a valid template.
+
+---
+
 ## Issue: CLI Authentication Failed
 
 ### Symptom
@@ -826,6 +888,13 @@ KPIs not appearing on new agent?
 ├── Check KPIs exist for THIS agent → olakai kpis list --agent-id THIS_AGENT_ID
 ├── If empty → Create KPIs for this agent (can't reuse from other agents)
 └── CustomDataConfigs ARE shared → no need to recreate those
+
+Classifier KPI showing null or not updating?
+├── Check KPI scope is CHAT → olakai kpis list --agent-id ID --json
+├── Check events have sessionId → olakai activity list --agent-id ID --json
+├── sessionId missing → Add sessionId to SDK event calls
+├── Too few turns → Send 2-3+ conversation turns before expecting a value
+└── Just sent events → Wait for chat decoration (runs after delay/completion)
 ```
 
 ## Key Insight: The customData → KPI Pipeline

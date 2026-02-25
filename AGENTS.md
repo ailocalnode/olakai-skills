@@ -409,6 +409,8 @@ olakai activity get EVENT_ID [--json]
 # KPIs
 olakai kpis list --agent-id ID [--json]
 olakai kpis create --name "Name" --agent-id ID --calculator-id formula --formula "X" [--unit "unit"] [--aggregation SUM|AVERAGE]
+olakai kpis create --name "Name" --agent-id ID --calculator-id classifier --template-id TEMPLATE_ID --scope CHAT
+olakai kpis templates                          # List available classifier templates
 olakai kpis update KPI_ID --formula "X"
 olakai kpis validate --formula "X" --agent-id ID
 olakai kpis delete KPI_ID [--force]
@@ -435,8 +437,8 @@ const openai = olakai.wrap(new OpenAI({ apiKey }), { provider: "openai", default
 // Call with context (session grouping is automatic)
 await openai.chat.completions.create(params, { userEmail, task, customData });
 
-// Manual event
-olakai.event({ prompt, response, tokens, requestTime, task, customData });
+// Manual event (sessionId groups conversation turns for CHAT-scoped KPIs)
+olakai.event({ prompt, response, tokens, requestTime, sessionId, task, customData });
 ```
 
 **Python (`olakai-sdk`):**
@@ -498,10 +500,10 @@ When bumping version in `plugins/olakai/.claude-plugin/plugin.json`:
 The authoritative source for current published SDK/CLI versions is:
 `localnode-app/packages/config/sdk-versions.ts`
 
-Check this file to ensure skills reference the correct versions:
-- TypeScript SDK: `@olakai/sdk`
-- Python SDK: `olakai-sdk` (PyPI)
-- CLI: `olakai-cli`
+**Current versions** (last updated Feb 2026):
+- TypeScript SDK: `@olakai/sdk` v2.2.0
+- Python SDK: `olakai-sdk` v1.2.0 (PyPI)
+- CLI: `olakai-cli` v0.1.12
 
 When SDK or CLI releases occur, verify that code examples in SKILL.md files are compatible with the new version.
 

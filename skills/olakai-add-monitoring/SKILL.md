@@ -258,6 +258,35 @@ with olakai_context(
 # Note: Session grouping is automatic via internal sessionId
 ```
 
+#### Grouping Events by Conversation (sessionId)
+
+For assistive AI (chatbots/copilots), use `sessionId` to group multiple turns of a conversation together. This is required for CHAT-scoped KPIs (like classifier templates) that analyze the full conversation.
+
+TypeScript:
+```typescript
+// Group events by conversation for CHAT-scoped KPIs
+olakai.event({
+  prompt: userMessage,
+  response: aiResponse,
+  sessionId: conversationId,  // groups turns in the same conversation
+  userEmail: user.email,
+});
+```
+
+Python:
+```python
+with olakai_context(
+    userEmail=user.email,
+    sessionId=conversation_id,  # groups turns in the same conversation
+):
+    response = client.chat.completions.create(
+        model="gpt-4",
+        messages=[{"role": "user", "content": user_message}]
+    )
+```
+
+> **When to use `sessionId`:** If your agent handles multi-turn conversations and you want KPIs that evaluate the entire conversation (e.g., sentiment scoring, satisfaction), pass a consistent `sessionId` across all turns. For single-shot agentic workflows, session grouping is automatic and you typically do not need to set this explicitly.
+
 #### Adding Custom Data
 
 > ⚠️ **IMPORTANT**: Only send fields you've registered as CustomDataConfigs (Step 5.3). Unregistered fields are stored but **cannot be used in KPIs**.
@@ -818,6 +847,7 @@ olakai.event({
   response: "output",
   tokens: 1500,
   requestTime: 5000,
+  sessionId: "conversation-id",                // Groups turns in the same conversation (for CHAT-scoped KPIs)
   taskExecutionId: "uuid-shared-across-agents", // Correlates events across agents in a multi-agent task
   task: "Data Processing & Analysis",
   customData: { workflowId: "abc" }
@@ -829,8 +859,8 @@ olakai.event({
 olakai_config(api_key)
 instrument_openai()
 
-# Context for calls (taskExecutionId links events across agents in a task)
-with olakai_context(userEmail="user@example.com", taskExecutionId="uuid-from-orchestrator", task="Support"):
+# Context for calls (sessionId groups conversation turns, taskExecutionId links events across agents)
+with olakai_context(userEmail="user@example.com", sessionId="conversation-id", taskExecutionId="uuid-from-orchestrator", task="Support"):
     response = client.chat.completions.create(...)
 
 # Manual event
