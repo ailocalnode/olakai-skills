@@ -62,6 +62,7 @@ olakai agents list --json | jq '.[] | {id, name}'
 | `olakai activity kpis --include-atoms --json` | Per-event KPI values |
 | `olakai agents list --json` | Agent metadata |
 | `olakai kpis list --json` | KPI definitions |
+| `olakai activity sessions --agent-id ID --json` | Session decoration status + summary counts |
 
 ---
 

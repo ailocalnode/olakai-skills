@@ -247,6 +247,7 @@ olakai agents get AGENT_ID [--json]
 # Activity/Events
 olakai activity list [--limit N] [--agent-id ID] [--json]
 olakai activity get EVENT_ID [--json]
+olakai activity sessions --agent-id ID [--json]  # Session decoration diagnostics
 
 # KPIs (agent-specific: each KPI belongs to ONE agent, cannot be shared)
 olakai kpis list --agent-id ID [--json]
