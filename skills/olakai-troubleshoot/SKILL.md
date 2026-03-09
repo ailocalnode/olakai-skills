@@ -67,6 +67,9 @@ olakai custom-data list
 
 # List KPIs for an agent
 olakai kpis list --agent-id YOUR_AGENT_ID
+
+# Check session/chat decoration status (for CHAT-scope KPIs)
+olakai activity sessions --agent-id YOUR_AGENT_ID
 ```
 
 ---
@@ -626,6 +629,19 @@ If `sessionId` is null or different for each event, the platform cannot group th
 **3. Wait for chat decoration**
 
 Chat decoration (which triggers classifier evaluation) runs after a conversation is considered complete or after a processing delay. If you just sent events, wait a few minutes and check again.
+
+**4. Inspect session decoration status**
+
+```bash
+olakai activity sessions --agent-id YOUR_AGENT_ID
+```
+
+This shows a summary of how many sessions (chats) have been decorated vs. still pending. If most sessions show `NEW` status, the decoration pipeline hasn't processed them yet. If sessions show `DECORATION_FAILED`, check the error column for details.
+
+```bash
+# Get full diagnostic details as JSON
+olakai activity sessions --agent-id YOUR_AGENT_ID --json
+```
 
 ### Fix
 

@@ -405,6 +405,7 @@ olakai agents update AGENT_ID [--name "Name"] [--workflow WORKFLOW_ID]
 # Activity
 olakai activity list [--limit N] [--agent-id ID] [--json]
 olakai activity get EVENT_ID [--json]
+olakai activity sessions --agent-id ID [--json]
 
 # KPIs
 olakai kpis list --agent-id ID [--json]

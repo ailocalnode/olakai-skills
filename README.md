@@ -82,6 +82,7 @@ olakai whoami
 # View Activity
 olakai activity list --limit 10
 olakai activity get EVENT_ID --json
+olakai activity sessions --agent-id ID  # Session decoration status
 
 # Manage Agents (includes API key generation)
 olakai agents list
