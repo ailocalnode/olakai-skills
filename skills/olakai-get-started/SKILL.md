@@ -53,7 +53,7 @@ olakai agents list --json 2>/dev/null | head -5 || echo "NO_AGENTS_OR_NOT_AUTH"
 |--------|---------|
 | `CLI_NOT_INSTALLED` | [Step 1: Create Account](#step-1-create-an-olakai-account) |
 | `NOT_AUTHENTICATED` | [Step 2: Install CLI](#step-2-install-the-cli) if CLI missing, else [Step 3: Authenticate](#step-3-authenticate) |
-| Empty agents list | [Step 4: Create Your First Agent](#step-4-create-your-first-agent) |
+| Empty agents list | [Step 4: Register Your Agent](#step-4-register-your-agent-in-olakai) |
 | Agents exist | You're all set! Use `/olakai-new-project` or `/olakai-integrate` instead |
 
 ---
@@ -207,11 +207,11 @@ olakai login
 
 ---
 
-## Step 4: Create Your First Agent
+## Step 4: Register Your Agent in Olakai
 
-An "agent" in Olakai represents any AI-powered feature you want to monitor.
+This step registers your AI agent (or any AI-powered feature) in Olakai so it can be monitored. This doesn't build any code — it creates a tracking record where Olakai collects analytics, KPIs, and governance data.
 
-### 4.1 Create the Agent
+### 4.1 Register the Agent
 
 ```bash
 # Create agent with an API key for SDK integration
