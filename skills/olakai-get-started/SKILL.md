@@ -16,7 +16,7 @@ description: >
 license: MIT
 metadata:
   author: olakai
-  version: "1.8.0"
+  version: "1.10.1"
 ---
 
 # Get Started with Olakai
@@ -55,9 +55,11 @@ olakai agents list --json 2>/dev/null | head -5 || echo "NO_AGENTS_OR_NOT_AUTH"
 
 ## Step 1: Create an Olakai Account
 
-If you don't have an Olakai account yet, sign up at:
+If you don't have an Olakai account yet, sign up using the developer signup flow:
 
-**https://app.olakai.ai/signup**
+**https://app.olakai.ai/signup?flow=developer&source=claude-code**
+
+This developer-specific flow streamlines setup for SDK integrations. After email verification, you'll automatically receive an SDK API key — no extra steps needed.
 
 What you get:
 - **Free tier** - Monitor up to 1,000 events/month
@@ -417,7 +419,7 @@ olakai activity get EVENT_ID --json
 
 ## Summary Checklist
 
-- [ ] Account created at https://app.olakai.ai/signup
+- [ ] Account created at https://app.olakai.ai/signup?flow=developer&source=claude-code
 - [ ] CLI installed (`npm install -g olakai-cli`)
 - [ ] CLI authenticated (`olakai login`)
 - [ ] First agent created with API key

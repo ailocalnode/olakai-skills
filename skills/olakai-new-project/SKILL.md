@@ -20,7 +20,7 @@ description: >
 license: MIT
 metadata:
   author: olakai
-  version: "1.8.0"
+  version: "1.10.1"
 ---
 
 # Build a New AI Agent Project with Olakai
