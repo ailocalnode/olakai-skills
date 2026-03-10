@@ -1,14 +1,15 @@
 # Olakai Plugin for Claude Code
 
-Official plugin for integrating AI agents with [Olakai](https://olakai.ai) - the enterprise AI observability and governance platform.
+Official plugin for integrating AI agents with [Olakai](https://olakai.ai) - the enterprise AI analytics and governance platform. Measure ROI, govern risk, control costs across all AI tools.
 
 ## Skills Included
 
 | Skill | Description |
 |-------|-------------|
-| **olakai-create-agent** | Create a new AI agent with Olakai monitoring from scratch |
-| **olakai-add-monitoring** | Add Olakai monitoring to an existing AI agent |
-| **olakai-troubleshoot** | Troubleshoot monitoring issues - missing events, KPI problems |
+| **olakai-get-started** | Get started with Olakai - install, authenticate, set up first agent |
+| **olakai-create-agent** | Create a new AI agent with Olakai analytics from scratch |
+| **olakai-add-monitoring** | Add Olakai tracking to an existing AI agent |
+| **olakai-troubleshoot** | Troubleshoot issues - missing events, KPI problems |
 | **generate-analytics-reports** | Generate terminal-based analytics reports from Olakai data |
 
 ## Agent Included
