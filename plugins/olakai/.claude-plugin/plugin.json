@@ -1,6 +1,6 @@
 {
   "name": "olakai",
-  "description": "Olakai AI observability - create agents with monitoring, add observability to existing code, troubleshoot issues, generate analytics reports",
+  "description": "Olakai - measure AI ROI, govern risk, and control costs. Create agents with analytics, add tracking to existing code, troubleshoot, and generate reports",
   "version": "1.10.0",
   "author": {
     "name": "Olakai",
@@ -10,13 +10,17 @@
   "repository": "https://github.com/olakai-ai/olakai-skills",
   "license": "MIT",
   "keywords": [
-    "ai-observability",
+    "ai-analytics",
+    "ai-roi",
     "monitoring",
     "analytics",
     "kpi",
     "governance",
+    "cost-control",
+    "shadow-ai",
     "openai",
     "anthropic",
-    "llm"
+    "llm",
+    "enterprise-ai"
   ]
 }
