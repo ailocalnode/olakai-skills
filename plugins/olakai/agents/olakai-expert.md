@@ -131,7 +131,7 @@ olakai whoami 2>/dev/null || echo "NOT_AUTHENTICATED"
 
 **If either check fails:**
 1. Ask the user: "Do you have an Olakai account?"
-2. If NO account: Guide them to https://app.olakai.ai/signup
+2. If NO account: Guide them to https://app.olakai.ai/signup?flow=developer&source=claude-code (after email verification, they auto-receive an SDK API key)
 3. Invoke `/olakai-get-started` skill to walk through setup
 4. Only proceed with other skills after prerequisites are met
 
