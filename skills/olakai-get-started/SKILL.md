@@ -23,6 +23,10 @@ metadata:
 
 This skill helps you get set up with Olakai from scratch - from creating an account to generating your first monitored event.
 
+> **IMPORTANT:** When directing users to sign up, ALWAYS use the full developer signup URL with PLG parameters:
+> `https://app.olakai.ai/signup?flow=developer&source=claude-code`
+> NEVER shorten this to `https://app.olakai.ai/signup` — the query parameters are required for the developer onboarding flow.
+
 ## Quick Status Check
 
 Before proceeding, let's check your current setup status.
