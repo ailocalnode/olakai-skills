@@ -23,7 +23,8 @@ metadata:
 
 This skill helps you get set up with Olakai from scratch - from creating an account to generating your first monitored event.
 
-> **IMPORTANT:** When directing users to sign up, ALWAYS use the full developer signup URL with PLG parameters:
+> **IMPORTANT:** For account creation, prefer the in-terminal API flow (Step 1) which calls `POST /api/auth/signup` directly.
+> If the user prefers a browser-based flow, use the full developer signup URL with PLG parameters:
 > `https://app.olakai.ai/signup?flow=developer&source=claude-code`
 > NEVER shorten this to `https://app.olakai.ai/signup` — the query parameters are required for the developer onboarding flow.
 
@@ -59,19 +60,61 @@ olakai agents list --json 2>/dev/null | head -5 || echo "NO_AGENTS_OR_NOT_AUTH"
 
 ## Step 1: Create an Olakai Account
 
-If you don't have an Olakai account yet, sign up using the developer signup flow:
+If you don't have an Olakai account yet, create one directly from the terminal.
+
+### 1.1 Collect User Details
+
+Ask the user for:
+- **Email address** (required)
+- **Company name** (required)
+- **First name** (optional)
+- **Last name** (optional)
+
+### 1.2 Create the Account via API
+
+Use the Bash tool to call the signup endpoint. Replace the placeholder values with what the user provided:
+
+```bash
+curl -s -X POST https://app.olakai.ai/api/auth/signup \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "USER_EMAIL",
+    "companyName": "USER_COMPANY",
+    "firstName": "USER_FIRST_NAME",
+    "lastName": "USER_LAST_NAME",
+    "source": "claude-code",
+    "medium": "skill"
+  }'
+```
+
+**Expected response:**
+```json
+{ "success": true, "message": "Check your email to verify your account.", "requiresVerification": true }
+```
+
+### 1.3 Verify Email
+
+Tell the user:
+- Check their inbox for a verification email from Olakai
+- Click the verification link to activate their account
+- After verification, an SDK API key is automatically generated — no extra steps needed
+
+### 1.4 Fallback: Browser Signup
+
+If the API call fails (network issues, corporate firewall, etc.), direct the user to the browser-based signup:
 
 **https://app.olakai.ai/signup?flow=developer&source=claude-code**
 
-This developer-specific flow streamlines setup for SDK integrations. After email verification, you'll automatically receive an SDK API key — no extra steps needed.
+> **IMPORTANT:** Always include the `?flow=developer&source=claude-code` query parameters — they activate the developer onboarding flow.
 
-What you get:
-- **Free tier** - Monitor up to 1,000 events/month
-- **Dashboard** - Real-time visibility into AI usage
-- **KPIs** - Track custom metrics across your agents
-- **Governance** - Set policies and risk controls
+### What You Get
 
-After signing up, you'll have access to the dashboard where you can see your agents and events.
+- **Free tier** — Monitor up to 1,000 events/month
+- **Dashboard** — Real-time visibility into AI usage
+- **KPIs** — Track custom metrics across your agents
+- **Governance** — Set policies and risk controls
+
+After verifying your email, you'll have access to the dashboard where you can see your agents and events.
 
 ---
 
