@@ -16,10 +16,10 @@ SKILL EVALUATION REQUIRED:
 
 Step 1 - EVALUATE: This prompt relates to Olakai or AI agent monitoring.
 Step 2 - SELECT: Choose the appropriate skill:
-  - Building new agent -> Skill("olakai-create-agent")
-  - Adding to existing code -> Skill("olakai-add-monitoring")
+  - Building new agent -> Skill("olakai-new-project")
+  - Adding to existing code -> Skill("olakai-integrate")
   - Something broken/not working -> Skill("olakai-troubleshoot")
-  - Analytics/reports/metrics -> Skill("generate-analytics-reports")
+  - Analytics/reports/metrics -> Skill("olakai-reports")
 Step 3 - ACTIVATE: Invoke the skill NOW before proceeding.
 
 CRITICAL: Skipping skill activation results in incomplete answers.

@@ -1,7 +1,8 @@
 ---
 name: olakai-planning
 description: >
-  Structure Olakai implementation plans to survive context clearing.
+  Create detailed implementation plans for Olakai monitoring that can be
+  executed independently.
 
   AUTO-INVOKE when: Creating a plan for Olakai monitoring, writing implementation
   steps for AI observability, planning agent creation or SDK integration, entering
@@ -10,9 +11,9 @@ description: >
   TRIGGER KEYWORDS: plan, implementation plan, steps, roadmap, architecture,
   design, olakai plan, monitoring plan, agent plan, planning, plan mode.
 
-  DO NOT load for: Executing implementation (use olakai-create-agent or
-  olakai-add-monitoring), troubleshooting (use olakai-troubleshoot), generating
-  reports (use generate-analytics-reports).
+  DO NOT load for: Executing implementation (use olakai-new-project or
+  olakai-integrate), troubleshooting (use olakai-troubleshoot), generating
+  reports (use olakai-reports).
 license: MIT
 metadata:
   author: olakai
@@ -53,7 +54,7 @@ Every Olakai implementation plan MUST follow this structure:
 
 ## Step N: [Step Title]
 
-**Invoke skill**: `/olakai-create-agent` (or appropriate skill)
+**Invoke skill**: `/olakai-new-project` (or appropriate skill)
 **Why this skill**: [Brief explanation of what guidance this skill provides]
 
 ### What to do:
@@ -102,10 +103,10 @@ olakai activity get EVENT_ID --json | jq '{customData, kpiData}'
 | Task | Invoke Skill | What It Provides |
 |------|--------------|------------------|
 | Not authenticated / CLI missing | `/olakai-get-started` | Install CLI, login, create first agent with API key |
-| Build new agent from scratch | `/olakai-create-agent` | Full agent setup with KPIs, CustomDataConfigs, SDK code |
-| Add monitoring to existing code | `/olakai-add-monitoring` | Wrap existing LLM calls, add customData, minimal changes |
+| Build new agent from scratch | `/olakai-new-project` | Full agent setup with KPIs, CustomDataConfigs, SDK code |
+| Add monitoring to existing code | `/olakai-integrate` | Wrap existing LLM calls, add customData, minimal changes |
 | Something not working | `/olakai-troubleshoot` | Diagnose missing events, wrong KPIs, SDK errors |
-| Generate usage reports | `/generate-analytics-reports` | Terminal-based analytics without web UI |
+| Generate usage reports | `/olakai-reports` | Terminal-based analytics without web UI |
 | Create implementation plan | `/olakai-planning` | This skill - structure plans for context clearing |
 
 **Every step involving Olakai work MUST specify which skill to invoke.**
@@ -272,8 +273,8 @@ Here's a model plan that an agent can follow after context is cleared:
 ## Skill Reference
 | Task | Skill | Description |
 |------|-------|-------------|
-| Add monitoring | `/olakai-add-monitoring` | SDK integration, customData setup |
-| Create KPIs | `/olakai-add-monitoring` | KPI creation and formula setup |
+| Add monitoring | `/olakai-integrate` | SDK integration, customData setup |
+| Create KPIs | `/olakai-integrate` | KPI creation and formula setup |
 | Troubleshoot | `/olakai-troubleshoot` | Diagnose any issues |
 
 ## Prerequisites
@@ -285,7 +286,7 @@ Here's a model plan that an agent can follow after context is cleared:
 
 ## Step 1: Define Custom Data Schema
 
-**Invoke skill**: `/olakai-add-monitoring` (Section: "Define Your Schema First")
+**Invoke skill**: `/olakai-integrate` (Section: "Define Your Schema First")
 
 ### What to do:
 Create CustomDataConfigs for fields we'll track. These MUST exist before SDK sends data, or fields won't become KPI variables.
@@ -320,7 +321,7 @@ Invoke `/olakai-troubleshoot` with symptoms: "custom-data create command failing
 
 ## Step 2: Create KPIs
 
-**Invoke skill**: `/olakai-add-monitoring` (Section: "Create KPIs")
+**Invoke skill**: `/olakai-integrate` (Section: "Create KPIs")
 
 ### What to do:
 Create KPI formulas using CustomDataConfig field names as variables. Variable names must match CustomDataConfig names exactly (case-insensitive in formulas).
@@ -351,7 +352,7 @@ Invoke `/olakai-troubleshoot` with symptoms: "KPI formula validation failing" or
 
 ## Step 3: Add SDK Integration
 
-**Invoke skill**: `/olakai-add-monitoring` (Section: "SDK Integration")
+**Invoke skill**: `/olakai-integrate` (Section: "SDK Integration")
 
 ### What to do:
 Wrap the existing OpenAI client and pass customData with every LLM call. Field names MUST exactly match the CustomDataConfigs from Step 1.
@@ -465,9 +466,9 @@ The skills contain comprehensive implementation guidance. This plan provides str
 
 ## When NOT to Use This Skill
 
-- **For executing implementation**: Use `/olakai-create-agent` or `/olakai-add-monitoring`
+- **For executing implementation**: Use `/olakai-new-project` or `/olakai-integrate`
 - **For troubleshooting**: Use `/olakai-troubleshoot`
-- **For generating reports**: Use `/generate-analytics-reports`
+- **For generating reports**: Use `/olakai-reports`
 - **For simple tasks**: If the task is a single step, just invoke the appropriate skill directly
 
 This skill is specifically for **structuring multi-step plans** that need to survive context clearing and be executable by an agent without prior knowledge of Olakai patterns.

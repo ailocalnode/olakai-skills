@@ -6,11 +6,11 @@ Official plugin for integrating AI agents with [Olakai](https://olakai.ai) - the
 
 | Skill | Description |
 |-------|-------------|
-| **olakai-get-started** | Get started with Olakai - install, authenticate, set up first agent |
-| **olakai-create-agent** | Create a new AI agent with Olakai analytics from scratch |
-| **olakai-add-monitoring** | Add Olakai tracking to an existing AI agent |
-| **olakai-troubleshoot** | Troubleshoot issues - missing events, KPI problems |
-| **generate-analytics-reports** | Generate terminal-based analytics reports from Olakai data |
+| **olakai-get-started** | Install the CLI, authenticate, and send your first monitored event |
+| **olakai-new-project** | Build a new AI agent project from scratch with full observability |
+| **olakai-integrate** | Add Olakai to existing AI code with minimal changes |
+| **olakai-troubleshoot** | Diagnose and fix issues with events, KPIs, or SDK integration |
+| **olakai-reports** | Generate usage summaries, KPI trends, ROI reports from the terminal |
 
 ## Agent Included
 

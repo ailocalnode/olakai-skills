@@ -1,7 +1,7 @@
 ---
 name: olakai-troubleshoot
 description: >
-  Troubleshoot Olakai monitoring issues when something isn't working.
+  Diagnose and fix issues with events, KPIs, custom data, or SDK integration.
 
   AUTO-INVOKE when user mentions: events not appearing, KPIs showing wrong values,
   KPIs showing strings instead of numbers, custom data missing, null KPIs,
@@ -13,8 +13,8 @@ description: >
   CLI error, no events, events not appearing, diagnose, fix olakai, broken,
   SDK error, monitoring issue, API key invalid, events not tracked.
 
-  DO NOT load for: initial setup (use olakai-create-agent or olakai-add-monitoring),
-  or generating reports (use generate-analytics-reports).
+  DO NOT load for: initial setup (use olakai-new-project or olakai-integrate),
+  or generating reports (use olakai-reports).
 license: MIT
 metadata:
   author: olakai

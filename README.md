@@ -14,10 +14,10 @@ npx add-skill olakai-ai/olakai-skills --list
 
 # Install a specific skill
 npx add-skill olakai-ai/olakai-skills/olakai-get-started
-npx add-skill olakai-ai/olakai-skills/olakai-create-agent
-npx add-skill olakai-ai/olakai-skills/olakai-add-monitoring
+npx add-skill olakai-ai/olakai-skills/olakai-new-project
+npx add-skill olakai-ai/olakai-skills/olakai-integrate
 npx add-skill olakai-ai/olakai-skills/olakai-troubleshoot
-npx add-skill olakai-ai/olakai-skills/generate-analytics-reports
+npx add-skill olakai-ai/olakai-skills/olakai-reports
 ```
 
 ### Manual Installation
@@ -34,11 +34,11 @@ git clone https://github.com/olakai-ai/olakai-skills .claude/skills/olakai-skill
 
 | Skill | Description |
 |-------|-------------|
-| **olakai-get-started** | Get started with Olakai - account setup, CLI install, authentication, first agent |
-| **olakai-create-agent** | Create a new AI agent with Olakai monitoring from scratch |
-| **olakai-add-monitoring** | Add Olakai monitoring to an existing AI agent or LLM integration |
-| **olakai-troubleshoot** | Troubleshoot monitoring issues - missing events, KPI problems, SDK errors |
-| **generate-analytics-reports** | Generate terminal-based analytics reports without the web UI |
+| **olakai-get-started** | Install the CLI, authenticate, and send your first monitored event |
+| **olakai-new-project** | Build a new AI agent project from scratch with full observability |
+| **olakai-integrate** | Add Olakai to existing AI code with minimal changes |
+| **olakai-troubleshoot** | Diagnose and fix issues with events, KPIs, or SDK integration |
+| **olakai-reports** | Generate usage summaries, KPI trends, ROI reports from the terminal |
 
 ## Bundled Agent
 

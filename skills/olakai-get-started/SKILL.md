@@ -1,7 +1,7 @@
 ---
 name: olakai-get-started
 description: >
-  Get started with Olakai - install, authenticate, and set up your first agent.
+  Install the CLI, authenticate, and send your first monitored event.
 
   AUTO-INVOKE when: CLI is not installed, user is not authenticated, user asks
   about getting started with Olakai, user wants to try Olakai, user mentions
@@ -12,7 +12,7 @@ description: >
   no account, create account, register.
 
   DO NOT load for: users who are already authenticated and have agents set up
-  (use olakai-create-agent, olakai-add-monitoring, or olakai-troubleshoot instead).
+  (use olakai-new-project, olakai-integrate, or olakai-troubleshoot instead).
 license: MIT
 metadata:
   author: olakai
@@ -49,7 +49,7 @@ olakai agents list --json 2>/dev/null | head -5 || echo "NO_AGENTS_OR_NOT_AUTH"
 | `CLI_NOT_INSTALLED` | [Step 1: Create Account](#step-1-create-an-olakai-account) |
 | `NOT_AUTHENTICATED` | [Step 2: Install CLI](#step-2-install-the-cli) if CLI missing, else [Step 3: Authenticate](#step-3-authenticate) |
 | Empty agents list | [Step 4: Create Your First Agent](#step-4-create-your-first-agent) |
-| Agents exist | You're all set! Use `/olakai-create-agent` or `/olakai-add-monitoring` instead |
+| Agents exist | You're all set! Use `/olakai-new-project` or `/olakai-integrate` instead |
 
 ---
 
@@ -357,8 +357,8 @@ olakai kpis create \
 
 ### Learn More
 
-- **`/olakai-create-agent`** - Detailed guide for building agents with full observability
-- **`/olakai-add-monitoring`** - Add monitoring to existing AI code
+- **`/olakai-new-project`** - Detailed guide for building agents with full observability
+- **`/olakai-integrate`** - Add monitoring to existing AI code
 - **`/olakai-troubleshoot`** - Debug issues with events or KPIs
 
 ---

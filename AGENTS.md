@@ -19,13 +19,13 @@ olakai-skills/
 ├── skills/                       # CANONICAL: Agent Skills standard structure
 │   ├── olakai-get-started/
 │   │   └── SKILL.md              # Onboarding: install CLI, auth, first agent (~300 lines)
-│   ├── olakai-create-agent/
+│   ├── olakai-new-project/
 │   │   └── SKILL.md              # Create new agents with monitoring (~540 lines)
-│   ├── olakai-add-monitoring/
+│   ├── olakai-integrate/
 │   │   └── SKILL.md              # Add monitoring to existing code (~680 lines)
 │   ├── olakai-troubleshoot/
 │   │   └── SKILL.md              # Diagnose and fix issues (~610 lines)
-│   └── generate-analytics-reports/
+│   └── olakai-reports/
 │       └── SKILL.md              # Generate CLI-based analytics reports (~500 lines)
 ├── plugins/
 │   └── olakai/                   # Claude Code plugin directory
@@ -36,10 +36,10 @@ olakai-skills/
 │       │   └── olakai-expert.md  # Bundled agent combining all skills
 │       └── skills/               # SYMLINKS to root skills/ directory
 │           ├── olakai-get-started -> ../../../skills/olakai-get-started
-│           ├── olakai-create-agent -> ../../../skills/olakai-create-agent
-│           ├── olakai-add-monitoring -> ../../../skills/olakai-add-monitoring
+│           ├── olakai-new-project -> ../../../skills/olakai-new-project
+│           ├── olakai-integrate -> ../../../skills/olakai-integrate
 │           ├── olakai-troubleshoot -> ../../../skills/olakai-troubleshoot
-│           ├── generate-analytics-reports -> ../../../skills/generate-analytics-reports
+│           ├── olakai-reports -> ../../../skills/olakai-reports
 │           └── olakai-planning -> ../../../skills/olakai-planning
 ├── .claude-plugin/
 │   └── marketplace.json          # Root marketplace manifest
@@ -73,12 +73,12 @@ olakai-skills/
 
 | Skill | Lines | Purpose |
 |-------|-------|---------|
-| `olakai-get-started` | ~300 | Onboarding: account creation, CLI install, auth, first agent |
-| `olakai-create-agent` | ~540 | Build new AI agents from scratch with full observability |
-| `olakai-add-monitoring` | ~680 | Add Olakai to existing working AI code with minimal changes |
-| `olakai-troubleshoot` | ~610 | Diagnose missing events, KPI issues, SDK errors |
-| `generate-analytics-reports` | ~500 | Generate terminal-based analytics reports (usage, KPIs, risk, ROI) |
-| `olakai-planning` | ~350 | Structure implementation plans to survive context clearing |
+| `olakai-get-started` | ~300 | Install the CLI, authenticate, and send your first monitored event |
+| `olakai-new-project` | ~540 | Build a new AI agent project from scratch with full observability |
+| `olakai-integrate` | ~680 | Add Olakai to existing AI code with minimal changes |
+| `olakai-troubleshoot` | ~610 | Diagnose and fix issues with events, KPIs, custom data, or SDK integration |
+| `olakai-reports` | ~500 | Generate usage summaries, KPI trends, ROI reports from the terminal |
+| `olakai-planning` | ~350 | Create detailed implementation plans that can be executed independently |
 
 Each skill follows YAML frontmatter + Markdown format with:
 - `name`: Skill identifier
@@ -234,10 +234,10 @@ Before answering Olakai-related questions, evaluate whether to load a skill:
 | User Intent | Skill to Load | Keywords |
 |-------------|---------------|----------|
 | **Not set up yet** | `olakai-get-started` | get started, setup, install, signup, account, new to olakai |
-| Build new AI agent | `olakai-create-agent` | create, new, build, start, design agent |
-| Add monitoring to existing code | `olakai-add-monitoring` | add, integrate, existing, wrap, instrument |
+| Build new AI agent | `olakai-new-project` | create, new, build, start, design agent |
+| Add monitoring to existing code | `olakai-integrate` | add, integrate, existing, wrap, instrument |
 | Something not working | `olakai-troubleshoot` | not working, error, missing, wrong, null, debug |
-| View data/metrics | `generate-analytics-reports` | report, analytics, summary, trends, usage |
+| View data/metrics | `olakai-reports` | report, analytics, summary, trends, usage |
 | Create implementation plan | `olakai-planning` | plan, steps, roadmap, architecture, design, plan mode |
 
 ### Invocation Pattern
@@ -265,7 +265,7 @@ Before answering Olakai-related questions, evaluate whether to load a skill:
 ```bash
 # Using add-skill CLI
 npx add-skill olakai-ai/olakai-skills --list
-npx add-skill olakai-ai/olakai-skills/olakai-create-agent
+npx add-skill olakai-ai/olakai-skills/olakai-new-project
 ```
 
 ### Claude Code Plugin
@@ -273,7 +273,7 @@ npx add-skill olakai-ai/olakai-skills/olakai-create-agent
 ```bash
 # Plugin Marketplace
 /plugin marketplace add olakai-ai/olakai-skills
-/plugin install olakai-create-agent@olakai-skills
+/plugin install olakai-new-project@olakai-skills
 ```
 
 ### Direct Git (user-level)
@@ -350,7 +350,7 @@ This skills repository **documents** the APIs of other Olakai repositories. It d
 | TypeScript SDK API change | `olakai-sdk-typescript` | All SKILL.md (TypeScript examples) |
 | Python SDK API change | `olakai-sdk-python` | All SKILL.md (Python examples) |
 | API endpoint change | `localnode-app` | olakai-troubleshoot (curl examples) |
-| New KPI feature | `localnode-app` | olakai-create-agent, olakai-troubleshoot |
+| New KPI feature | `localnode-app` | olakai-new-project, olakai-troubleshoot |
 
 ### Synchronization Checklist
 
