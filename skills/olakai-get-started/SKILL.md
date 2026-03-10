@@ -16,7 +16,7 @@ description: >
 license: MIT
 metadata:
   author: olakai
-  version: "1.8.0"
+  version: "1.10.1"
 ---
 
 # Get Started with Olakai
