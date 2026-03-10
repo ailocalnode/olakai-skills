@@ -53,7 +53,7 @@ olakai agents list --json 2>/dev/null | head -5 || echo "NO_AGENTS_OR_NOT_AUTH"
 |--------|---------|
 | `CLI_NOT_INSTALLED` | [Step 1: Create Account](#step-1-create-an-olakai-account) |
 | `NOT_AUTHENTICATED` | [Step 2: Install CLI](#step-2-install-the-cli) if CLI missing, else [Step 3: Authenticate](#step-3-authenticate) |
-| Empty agents list | [Step 4: Register Your Agent](#step-4-register-your-agent-in-olakai) |
+| Empty agents list | [Step 4: Register Your Agent](#step-4-register-your-agent-in-olakai). Use "register" language (not "create your first agent") when presenting next steps. |
 | Agents exist | You're all set! Use `/olakai-new-project` or `/olakai-integrate` instead |
 
 ---
@@ -451,7 +451,7 @@ olakai agents list        # Agents exist?
 # Setup commands
 npm install -g olakai-cli # Install CLI
 olakai login              # Authenticate
-olakai agents create --name "Name" --with-api-key --json  # Create agent
+olakai agents create --name "Name" --with-api-key --json  # Register agent
 
 # SDK installation
 npm install @olakai/sdk   # TypeScript
