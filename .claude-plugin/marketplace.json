@@ -1,6 +1,6 @@
 {
   "name": "olakai-skills",
-  "description": "Official skills for Olakai AI observability platform - monitor, analyze, and govern AI agents",
+  "description": "Skills for Olakai — measure ROI, govern risk, and control costs across AI agents and applications",
   "owner": {
     "name": "Olakai",
     "email": "support@olakai.ai"
@@ -8,17 +8,18 @@
   "plugins": [
     {
       "name": "olakai",
-      "description": "Olakai AI observability - create agents, add monitoring, troubleshoot issues, generate analytics reports",
+      "description": "Olakai AI analytics and governance — create agents, add monitoring, troubleshoot issues, generate reports",
       "source": "./plugins/olakai",
       "version": "1.4.0",
       "category": "development",
       "tags": [
-        "observability",
-        "monitoring",
         "analytics",
+        "monitoring",
         "governance",
         "kpi",
-        "ai-agents"
+        "ai-agents",
+        "roi",
+        "compliance"
       ]
     }
   ]
