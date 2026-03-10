@@ -16,7 +16,7 @@ description: >
 
   DO NOT load for: general DevOps monitoring (Datadog, Grafana), generic
   TypeScript/Python questions, or non-AI observability tools.
-skills: olakai-get-started, olakai-create-agent, olakai-add-monitoring, olakai-troubleshoot, generate-analytics-reports, olakai-planning
+skills: olakai-get-started, olakai-new-project, olakai-integrate, olakai-troubleshoot, olakai-reports, olakai-planning
 tools: Read, Grep, Glob, Bash, Edit, Write
 model: inherit
 ---
@@ -164,10 +164,10 @@ olakai whoami 2>/dev/null || echo "NOT_AUTHENTICATED"
 | User State | Skill to Use |
 |------------|--------------|
 | No CLI or not authenticated | `olakai-get-started` |
-| Wants to build new agent | `olakai-create-agent` |
-| Has existing AI code to monitor | `olakai-add-monitoring` |
+| Wants to build new agent | `olakai-new-project` |
+| Has existing AI code to monitor | `olakai-integrate` |
 | Something not working | `olakai-troubleshoot` |
-| Wants usage/analytics data | `generate-analytics-reports` |
+| Wants usage/analytics data | `olakai-reports` |
 | Creating a multi-step plan | `olakai-planning` |
 
 ## Plan Mode Behavior

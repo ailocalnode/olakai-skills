@@ -65,10 +65,10 @@ The hook triggers on these patterns:
 
 | Intent | Skill |
 |--------|-------|
-| Creating new agents | `olakai-create-agent` |
-| Adding to existing code | `olakai-add-monitoring` |
+| Creating new agents | `olakai-new-project` |
+| Adding to existing code | `olakai-integrate` |
 | Debugging/troubleshooting | `olakai-troubleshoot` |
-| Reports/analytics | `generate-analytics-reports` |
+| Reports/analytics | `olakai-reports` |
 
 ## Uninstalling
 
