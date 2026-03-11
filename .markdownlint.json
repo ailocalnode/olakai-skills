@@ -1,0 +1,20 @@
+{
+  "line-length": false,
+  "no-duplicate-heading": false,
+  "no-inline-html": false,
+  "commands-show-output": false,
+  "first-line-heading": false,
+  "no-trailing-spaces": true,
+  "no-hard-tabs": true,
+  "single-h1": false,
+  "blanks-around-fences": false,
+  "blanks-around-lists": false,
+  "blanks-around-headings": false,
+  "no-bare-urls": false,
+  "no-trailing-punctuation": false,
+  "fenced-code-language": false,
+  "table-column-style": false,
+  "no-blanks-blockquote": false,
+  "no-emphasis-as-heading": false,
+  "blanks-around-tables": false
+}

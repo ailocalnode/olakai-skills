@@ -1,0 +1,70 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate SKILL.md frontmatter
+        run: |
+          status=0
+          for file in skills/*/SKILL.md; do
+            skill_name=$(basename "$(dirname "$file")")
+
+            # Check file starts with YAML frontmatter delimiter
+            if ! head -1 "$file" | grep -q '^---$'; then
+              echo "::error file=$file::Missing YAML frontmatter"
+              status=1
+              continue
+            fi
+
+            # Extract frontmatter (between first two --- lines)
+            frontmatter=$(sed -n '1,/^---$/{ /^---$/d; p; }' "$file" | tail -n +1)
+
+            # Check required fields
+            for field in name description; do
+              if ! echo "$frontmatter" | grep -q "^${field}:"; then
+                echo "::error file=$file::Missing required frontmatter field: $field"
+                status=1
+              fi
+            done
+
+            echo "OK: $file"
+          done
+          exit $status
+
+      - name: Verify symlinks
+        run: |
+          status=0
+          for link in plugins/olakai/skills/*/; do
+            link="${link%/}"
+            if [ -L "$link" ]; then
+              if [ ! -e "$link/SKILL.md" ]; then
+                echo "::error::Broken symlink: $link"
+                status=1
+              else
+                echo "OK: $link -> $(readlink "$link")"
+              fi
+            fi
+          done
+
+          # Check every skill has a corresponding symlink
+          for skill_dir in skills/*/; do
+            skill_name=$(basename "$skill_dir")
+            if [ ! -L "plugins/olakai/skills/$skill_name" ]; then
+              echo "::error::Missing symlink for $skill_name in plugins/olakai/skills/"
+              status=1
+            fi
+          done
+          exit $status
+
+      - name: Lint markdown
+        uses: DavidAnson/markdownlint-cli2-action@v19
+        with:
+          globs: "skills/**/*.md"
+          config: ".markdownlint.json"
