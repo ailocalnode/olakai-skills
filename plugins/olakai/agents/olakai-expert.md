@@ -190,6 +190,15 @@ olakai activity list --agent-id AGENT_ID --limit 1 --json
 
 # Inspect event details
 olakai activity get EVENT_ID --json | jq '{customData, kpiData}'
+
+# Verify auto-provisioned classifier KPI exists (required for ROI)
+olakai kpis list --agent-id AGENT_ID --json | jq '.[] | select(.calculatorId == "classifier") | {name, scope, templateId}'
+
+# If classifier KPI is missing (common for CLI-created agents), add it:
+# olakai kpis create --calculator-id classifier --template-id time_saved_estimator --scope CHAT --agent-id AGENT_ID
+
+# Check session decoration status (classifier KPIs run at CHAT scope)
+olakai activity sessions --agent-id AGENT_ID
 ```
 
 ## Success Criteria
@@ -217,6 +226,12 @@ olakai custom-data list
 
 # Check KPI formulas
 olakai kpis list --agent-id AGENT_ID --json
+
+# Verify classifier KPI for ROI (should exist for all agents)
+olakai kpis list --agent-id AGENT_ID --json | jq '.[] | select(.calculatorId == "classifier")'
+
+# Check session decoration status
+olakai activity sessions --agent-id AGENT_ID
 ```
 
 ### Red Flags to Watch For
@@ -228,3 +243,5 @@ olakai kpis list --agent-id AGENT_ID --json
 | customData has extra fields | Sending unregistered data | Remove fields without configs |
 | No events appearing | SDK/API key issue | Check init, API key, debug mode |
 | KPIs missing on new agent | Assumed KPIs carry over from another agent | Create new KPIs: `olakai kpis create --agent-id THIS_AGENT_ID` |
+| ROI shows same $ for every prompt | Classifier KPI missing (common for CLI-created agents) | `olakai kpis create --calculator-id classifier --template-id time_saved_estimator --scope CHAT --agent-id ID` |
+| Shadow AI ROI flat across all apps | Per-app `defaultTimeSavedMinutes` not set | Configure per-app overrides in Shadow AI > Manage |

@@ -671,6 +671,76 @@ Verify the `template-id` you used when creating the KPI is a valid template.
 
 ---
 
+## Issue: ROI Shows Same Dollar Value for Every Prompt
+
+### Symptom
+
+ROI on the dashboard shows a flat value (e.g., $10) for every prompt request, regardless of conversation complexity.
+
+### Root Cause
+
+The agent does not have a CHAT-scope classifier KPI (`time_saved_estimator`). Without it, ROI falls back to a default time saved estimate instead of per-conversation AI classification.
+
+### Diagnostic Steps
+
+**1. Check if the classifier KPI exists:**
+```bash
+olakai kpis list --agent-id YOUR_AGENT_ID --json | jq '.[] | select(.calculatorId == "classifier") | {name, scope, calculatorId}'
+```
+
+If empty, the classifier KPI is missing.
+
+**2. Check if the agent was created via CLI:**
+
+Agents created through `olakai agents create` (CLI/API) do not automatically get the classifier KPI. Only agents created through the dashboard UI auto-provision it.
+
+### Fix
+
+**Add the classifier KPI manually:**
+```bash
+olakai kpis create --name "Time Saved" \
+  --calculator-id classifier --template-id time_saved_estimator \
+  --scope CHAT --agent-id YOUR_AGENT_ID
+```
+
+**Verify it was created:**
+```bash
+olakai kpis list --agent-id YOUR_AGENT_ID
+```
+
+After adding, new conversations will get per-conversation time saved estimates from the classifier, producing varied ROI values.
+
+---
+
+## Issue: Shadow AI ROI Shows Same Value for All Apps
+
+### Symptom
+
+In Assistive IQ / Shadow AI dashboards, every application shows the same dollar value per interaction, regardless of the app (ChatGPT, Claude, Gemini, etc.).
+
+### Root Cause
+
+The per-app time saved override (`defaultTimeSavedMinutes` on `LanguageModel`) is not configured. All apps fall back to the global default of 30 minutes.
+
+### Diagnostic
+
+Check if any per-app overrides are set in the admin UI:
+- Navigate to **Assistive IQ > Shadow AI > Manage**
+- Click on an app's StatusCard
+- Check if "Default Time Saved" has a custom value
+
+### Fix
+
+**Set per-app time saved values:**
+1. Go to **Assistive IQ > Shadow AI > Manage**
+2. Click on an application (e.g., ChatGPT)
+3. Set "Default Time Saved (minutes)" to an appropriate value for that app
+4. Repeat for each application
+
+Per-app overrides always take precedence over the global default. Different apps may warrant different default time saved values (e.g., ChatGPT for quick questions: 10 min, Claude for deep analysis: 45 min).
+
+---
+
 ## Issue: CLI Authentication Failed
 
 ### Symptom
@@ -911,6 +981,17 @@ Classifier KPI showing null or not updating?
 ├── sessionId missing → Add sessionId to SDK event calls
 ├── Too few turns → Send 2-3+ conversation turns before expecting a value
 └── Just sent events → Wait for chat decoration (runs after delay/completion)
+
+ROI shows same $ value for every prompt?
+├── Check classifier KPI exists → olakai kpis list --agent-id ID --json
+├── No classifier KPI → olakai kpis create --calculator-id classifier --template-id time_saved_estimator --scope CHAT --agent-id ID
+├── Agent created via CLI → CLI does not auto-provision classifier KPI, add manually
+└── Classifier exists but still flat → Check sessionId grouping, wait for chat decoration
+
+Shadow AI ROI shows same value for all apps?
+├── Per-app override not set → Check LanguageModel.defaultTimeSavedMinutes in admin UI
+├── All apps using global default (30 min) → Set per-app overrides in Shadow AI > Manage
+└── Per-app override always wins over AA estimate
 ```
 
 ## Key Insight: The customData → KPI Pipeline

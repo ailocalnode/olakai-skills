@@ -784,6 +784,60 @@ $ olakai activity get cmkeabc123 --json | jq '{customData, kpiData}'
 # ✅ All values present and numeric - integration working!
 ```
 
+## ROI Measurement
+
+After integrating monitoring, your agent is automatically set up for ROI tracking.
+
+### Auto-Provisioned Classifier KPI
+
+New agents created through the dashboard automatically receive a `time_saved_estimator` classifier KPI at **CHAT scope**. This KPI uses an LLM to analyze each conversation and estimate time saved (0, 3, 10, 30, or 60 minutes).
+
+**Verify the classifier KPI exists:**
+```bash
+olakai kpis list --agent-id YOUR_AGENT_ID
+# Look for calculatorId "classifier" with template "time_saved_estimator"
+```
+
+**If missing (e.g., agent created via CLI), add it manually:**
+```bash
+olakai kpis create --name "Time Saved" \
+  --calculator-id classifier --template-id time_saved_estimator \
+  --scope CHAT --agent-id YOUR_AGENT_ID
+```
+
+### ROI Formula
+
+```
+ROI Value = SUM(timeSavedMinutes * fteHourlyCost / 60)
+```
+
+- **Default hourly rate**: $55/hour
+- **Custom rate**: Set per-agent in dashboard > Agent Settings > ROI tab
+
+### Validate ROI Data
+
+After generating events, verify classifier results appear in chat-level KPI data:
+
+```bash
+# Check that the classifier KPI is producing results
+olakai activity sessions --agent-id YOUR_AGENT_ID
+# Sessions with DECORATED status should have agentKpiData populated
+
+# For detailed inspection
+olakai activity list --agent-id YOUR_AGENT_ID --limit 5 --json
+```
+
+> **Important**: Classifier KPIs run at the CHAT scope, meaning they evaluate the full conversation, not individual prompt requests. Ensure your events include a consistent `sessionId` to group conversation turns. Results appear after chat decoration runs (there may be a short delay).
+
+### Golden Rule for ROI Validation
+
+```
+1. Send 2-3 conversation turns with the same sessionId
+2. Wait for chat decoration to process
+3. Check: olakai activity sessions --agent-id YOUR_AGENT_ID
+4. Verify sessions show DECORATED status with time saved values
+```
+
 ## Common Integration Points
 
 | Application Type | Integration Point | Recommended Approach |
