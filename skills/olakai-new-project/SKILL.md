@@ -305,6 +305,36 @@ olakai kpis create --name "Time Saved" \
 
 Templates are a great starting point. You can always add custom formula-based KPIs alongside them.
 
+#### Auto-Provisioned ROI KPI
+
+> **New agents automatically get a `time_saved_estimator` classifier KPI at CHAT scope.** This KPI uses an LLM to analyze each conversation and estimate time saved (output classes: 0, 3, 10, 30, or 60 minutes). It powers the ROI calculation on your agent's dashboard.
+
+**Verify the auto-provisioned KPI exists:**
+```bash
+olakai kpis list --agent-id YOUR_AGENT_ID
+# Look for "time_saved_estimator" with scope CHAT and calculatorId "classifier"
+```
+
+**If missing (e.g., agent created via CLI), add it manually:**
+```bash
+olakai kpis create --name "Time Saved" \
+  --calculator-id classifier --template-id time_saved_estimator \
+  --scope CHAT --agent-id YOUR_AGENT_ID
+```
+
+**ROI Calculation:**
+```
+ROI Value = SUM(timeSavedMinutes * fteHourlyCost / 60)
+```
+- Default hourly rate: $55/hour
+- Configure a custom rate in the agent's ROI tab on the dashboard
+
+**Setting the hourly rate for meaningful ROI:**
+1. Navigate to your agent in the Olakai dashboard
+2. Go to the **ROI** tab
+3. Set the FTE hourly cost to match your organization's rate
+4. ROI values will update on subsequent events
+
 #### Custom Formula KPIs
 
 Define KPIs that use your custom data:
