@@ -18,7 +18,7 @@ description: >
 license: MIT
 metadata:
   author: olakai
-  version: "1.10.1"
+  version: "1.12.0"
 ---
 
 # Troubleshoot Olakai Agent Monitoring
