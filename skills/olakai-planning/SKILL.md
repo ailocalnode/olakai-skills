@@ -17,7 +17,7 @@ description: >
 license: MIT
 metadata:
   author: olakai
-  version: "1.10.1"
+  version: "1.12.0"
 ---
 
 # Olakai Implementation Planning Guide
