@@ -243,5 +243,5 @@ olakai activity sessions --agent-id AGENT_ID
 | customData has extra fields | Sending unregistered data | Remove fields without configs |
 | No events appearing | SDK/API key issue | Check init, API key, debug mode |
 | KPIs missing on new agent | Assumed KPIs carry over from another agent | Create new KPIs: `olakai kpis create --agent-id THIS_AGENT_ID` |
-| ROI shows same $ for every prompt | Classifier KPI missing (common for CLI-created agents) | `olakai kpis create --calculator-id classifier --template-id time_saved_estimator --scope CHAT --agent-id ID` |
+| ROI shows same $ for every prompt | Time Saved slot missing classifier (common for CLI-created agents) | `olakai kpis create --calculator-id classifier --template-id time_saved_estimator --scope CHAT --agent-id ID` |
 | Shadow AI ROI flat across all apps | Per-app `defaultTimeSavedMinutes` not set | Configure per-app overrides in Shadow AI > Manage |

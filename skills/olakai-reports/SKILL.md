@@ -58,7 +58,7 @@ olakai agents list --json | jq '.[] | {id, name}'
 |---------|---------------|
 | `olakai activity list --json` | Events with tokens, model, risk, status |
 | `olakai activity list --include-analytics --json` | + task, subtask, time saved, risk score |
-| `olakai activity kpis --json` | Core KPIs (executions, compliance, ROI) + custom KPIs |
+| `olakai activity kpis --json` | Raw metrics, metric slot KPIs, composites (ROI) + custom KPIs |
 | `olakai activity kpis --period daily --json` | Time-series breakdown |
 | `olakai activity kpis --include-atoms --json` | Per-event KPI values |
 | `olakai agents list --json` | Agent metadata |
@@ -185,12 +185,24 @@ Generated: [DATE]
 Agent: [AGENT_NAME] (or "All Agents")
 Period: [PERIOD]
 
-## Core KPIs
+## Raw Metrics
+| Metric | Current | Previous | Change |
+|--------|---------|----------|--------|
+| Interaction Volume | [VAL] | [PREV] | [+/-]% |
+| Token Consumption | [VAL] | [PREV] | [+/-]% |
+
+## Metric Slot KPIs
 | KPI | Current | Previous | Change |
 |-----|---------|----------|--------|
-| Total Executions | [VAL] | [PREV] | [+/-]% |
-| Compliance Rate | [VAL]% | [PREV]% | [+/-]% |
-| Estimated ROI | $[VAL] | $[PREV] | [+/-]% |
+| Execution Cost (USD) | $[VAL] | $[PREV] | [+/-]% |
+| Time Saved (min) | [VAL] | [PREV] | [+/-]% |
+| Value Created (USD) | $[VAL] | $[PREV] | [+/-]% |
+| Governance Compliance (%) | [VAL]% | [PREV]% | [+/-]% |
+
+## Composites
+| KPI | Current | Previous | Change |
+|-----|---------|----------|--------|
+| ROI | [VAL]x | [PREV]x | [+/-]% |
 
 ## Custom KPIs
 | KPI | Value | Unit | Aggregation |
@@ -209,12 +221,15 @@ Generated: 2025-01-21
 Agent: code-assistant
 Period: Last 7 days
 
-## Core KPIs
+## Raw Metrics & Slot KPIs
 | KPI | Current | Previous | Change |
 |-----|---------|----------|--------|
-| Total Executions | 847 | 792 | +7% |
-| Compliance Rate | 99.2% | 98.5% | +0.7% |
-| Estimated ROI | $4,235 | $3,960 | +7% |
+| Interaction Volume | 847 | 792 | +7% |
+| Execution Cost | $127.50 | $118.80 | +7% |
+| Time Saved | 1,694 min | 1,584 min | +7% |
+| Value Created | $4,235 | $3,960 | +7% |
+| Governance Compliance | 99.2% | 98.5% | +0.7% |
+| ROI | 33.2x | 33.3x | -0.3% |
 
 ## Custom KPIs
 | KPI | Value | Unit | Aggregation |
@@ -223,7 +238,7 @@ Period: Last 7 days
 | Bugs Found | 23 | count | SUM |
 | Avg Response Quality | 4.7 | score | AVERAGE |
 
-## Daily Executions (Last 7 Days)
+## Daily Interactions (Last 7 Days)
      150 ┤                           ╭──
      125 ┤              ╭────────────╯
      100 ┤    ╭─────────╯

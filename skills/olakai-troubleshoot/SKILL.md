@@ -679,7 +679,7 @@ ROI on the dashboard shows a flat value (e.g., $10) for every prompt request, re
 
 ### Root Cause
 
-The agent does not have a CHAT-scope classifier KPI (`time_saved_estimator`). Without it, ROI falls back to a default time saved estimate instead of per-conversation AI classification.
+The agent's **Time Saved** metric slot KPI does not have a CHAT-scope classifier (`time_saved_estimator`). Without it, the slot falls back to a default time saved estimate instead of per-conversation AI classification, causing the **Value Created** slot and the **ROI** composite to show flat values.
 
 ### Diagnostic Steps
 
@@ -983,9 +983,9 @@ Classifier KPI showing null or not updating?
 └── Just sent events → Wait for chat decoration (runs after delay/completion)
 
 ROI shows same $ value for every prompt?
-├── Check classifier KPI exists → olakai kpis list --agent-id ID --json
+├── Check Time Saved slot KPI has classifier → olakai kpis list --agent-id ID --json
 ├── No classifier KPI → olakai kpis create --calculator-id classifier --template-id time_saved_estimator --scope CHAT --agent-id ID
-├── Agent created via CLI → CLI does not auto-provision classifier KPI, add manually
+├── Agent created via CLI → CLI may not auto-provision classifier for Time Saved slot, add manually
 └── Classifier exists but still flat → Check sessionId grouping, wait for chat decoration
 
 Shadow AI ROI shows same value for all apps?
