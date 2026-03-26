@@ -155,8 +155,9 @@ The Olakai platform automatically tracks these fields - do NOT duplicate them in
 | User email | `userEmail` parameter | ❌ `email`, `userEmail` |
 | Timestamp | Event metadata | ❌ `timestamp`, `createdAt` |
 | Request time | `requestTime` parameter | ❌ `duration`, `latency` |
-| Token count | `tokens` parameter | ❌ `tokenCount`, `totalTokens` |
-| Model | Auto-detected | ❌ `model`, `modelName` |
+| Token count | `tokens` parameter / auto-extracted | ❌ `tokenCount`, `totalTokens` |
+| Model name | Auto-extracted from LLM response (`modelName`) | ❌ `model`, `modelName` |
+| Execution cost | Auto-calculated via model-based pricing | ❌ `cost`, `executionCost` |
 | Provider | Wrapped client config | ❌ `provider` |
 
 **customData is ONLY for:**
@@ -304,6 +305,10 @@ olakai kpis create --name "Time Saved" \
 4. Templates work at the CHAT scope — they analyze the entire conversation/workflow run
 
 Templates are a great starting point. You can always add custom formula-based KPIs alongside them.
+
+#### Execution Cost (Model-Based Pricing)
+
+> **Execution Cost is now automatically calculated using model-based pricing.** The SDK sends `modelName` as a top-level field (auto-extracted from LLM responses), and the platform resolves the cost per token based on the model used (e.g., GPT-4o, Claude Sonnet). If the model is not recognized, a fallback rate of $5/1M tokens is applied. You do not need to manually configure cost-per-token for recognized models.
 
 #### Auto-Provisioned ROI KPI
 
