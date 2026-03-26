@@ -107,7 +107,7 @@ const openai = olakai.wrap(
 );
 ```
 
-**That's it!** All calls through `openai` are now automatically tracked.
+**That's it!** All calls through `openai` are now automatically tracked. The SDK automatically captures the model name, token usage, and calculates execution cost using model-based pricing.
 
 ### For Python
 
@@ -295,7 +295,7 @@ with olakai_context(
 > ⚠️ **Only send data you'll use in KPIs or for filtering.** Don't duplicate fields already tracked by the platform:
 > - Session ID, Agent ID (automatic)
 > - User email (use `userEmail` parameter)
-> - Timestamps, token count, model, provider (automatic)
+> - Timestamps, token count, model name, execution cost, provider (automatic)
 
 TypeScript:
 ```typescript

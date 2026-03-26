@@ -501,10 +501,12 @@ When bumping version in `plugins/olakai/.claude-plugin/plugin.json`:
 The authoritative source for current published SDK/CLI versions is:
 `localnode-app/packages/config/sdk-versions.ts`
 
-**Current versions** (last updated Feb 2026):
-- TypeScript SDK: `@olakai/sdk` v2.2.0
-- Python SDK: `olakai-sdk` v1.2.0 (PyPI)
+**Current versions** (last updated March 2026):
+- TypeScript SDK: `@olakai/sdk` v2.3.0
+- Python SDK: `olakai-sdk` v1.3.0 (PyPI)
 - CLI: `olakai-cli` v0.1.12
+
+> **Note**: Both SDKs now auto-capture `modelName` from LLM responses and the platform uses model-based pricing for execution cost calculation.
 
 When SDK or CLI releases occur, verify that code examples in SKILL.md files are compatible with the new version.
 
