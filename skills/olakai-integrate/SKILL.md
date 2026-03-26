@@ -20,7 +20,7 @@ description: >
 license: MIT
 metadata:
   author: olakai
-  version: "1.10.1"
+  version: "1.12.0"
 ---
 
 # Integrate Olakai into Existing AI Code
@@ -788,31 +788,40 @@ $ olakai activity get cmkeabc123 --json | jq '{customData, kpiData}'
 
 After integrating monitoring, your agent is automatically set up for ROI tracking.
 
-### Auto-Provisioned Classifier KPI
+### Auto-Provisioned Metric Slot KPIs
 
-New agents created through the dashboard automatically receive a `time_saved_estimator` classifier KPI at **CHAT scope**. This KPI uses an LLM to analyze each conversation and estimate time saved (0, 3, 10, 30, or 60 minutes).
+New agents automatically receive **metric slot KPIs** that provide standardized measurements with default formulas:
 
-**Verify the classifier KPI exists:**
+| Slot KPI | Output Unit | Description |
+|----------|-------------|-------------|
+| Execution Cost | USD | Token-based cost estimate |
+| Time Saved | minutes | `time_saved_estimator` classifier (CHAT scope) |
+| Value Created | USD | Time Saved * hourly rate |
+| Governance Compliance | % | Policy pass rate |
+
+Plus a **composite**: **ROI** = Value Created / Execution Cost.
+
+**Verify the slot KPIs exist:**
 ```bash
 olakai kpis list --agent-id YOUR_AGENT_ID
-# Look for calculatorId "classifier" with template "time_saved_estimator"
+# Look for slot KPIs: Execution Cost, Time Saved, Value Created, Governance Compliance
 ```
 
-**If missing (e.g., agent created via CLI), add it manually:**
+**If the Time Saved classifier is missing (e.g., agent created via CLI), add it manually:**
 ```bash
 olakai kpis create --name "Time Saved" \
   --calculator-id classifier --template-id time_saved_estimator \
   --scope CHAT --agent-id YOUR_AGENT_ID
 ```
 
-### ROI Formula
+### ROI Composite
 
 ```
-ROI Value = SUM(timeSavedMinutes * fteHourlyCost / 60)
+ROI = Value Created / Execution Cost
 ```
 
-- **Default hourly rate**: $55/hour
-- **Custom rate**: Set per-agent in dashboard > Agent Settings > ROI tab
+- **Default hourly rate**: $55/hour (used in Value Created calculation)
+- **Custom rate**: Set per-agent in dashboard > Agent Settings > Assumptions panel
 
 ### Validate ROI Data
 

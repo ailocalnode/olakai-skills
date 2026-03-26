@@ -20,7 +20,7 @@ description: >
 license: MIT
 metadata:
   author: olakai
-  version: "1.10.1"
+  version: "1.12.0"
 ---
 
 # Build a New AI Agent Project with Olakai
@@ -310,35 +310,44 @@ Templates are a great starting point. You can always add custom formula-based KP
 
 > **Execution Cost is now automatically calculated using model-based pricing.** The SDK sends `modelName` as a top-level field (auto-extracted from LLM responses), and the platform resolves the cost per token based on the model used (e.g., GPT-4o, Claude Sonnet). If the model is not recognized, a fallback rate of $5/1M tokens is applied. You do not need to manually configure cost-per-token for recognized models.
 
-#### Auto-Provisioned ROI KPI
+#### Auto-Provisioned Metric Slot KPIs
 
-> **New agents automatically get a `time_saved_estimator` classifier KPI at CHAT scope.** This KPI uses an LLM to analyze each conversation and estimate time saved (output classes: 0, 3, 10, 30, or 60 minutes). It powers the ROI calculation on your agent's dashboard.
+> **New agents automatically get metric slot KPIs** that provide standardized measurements out of the box. Each slot has a default formula and an enforced output contract (unit).
 
-**Verify the auto-provisioned KPI exists:**
+**Auto-provisioned slots per agent:**
+
+| Slot KPI | Output Unit | Default Formula | Configurable Via |
+|----------|-------------|-----------------|------------------|
+| Execution Cost | USD | Token-based cost estimate | Assumptions panel (token rate) |
+| Time Saved | minutes | `time_saved_estimator` classifier (CHAT scope) | Assumptions panel (hourly rate) |
+| Value Created | USD | Time Saved * hourly rate | Assumptions panel (hourly rate) |
+| Governance Compliance | % | Policy pass rate | N/A (automatic) |
+
+**Composite KPI (derived from slots):**
+- **ROI** = Value Created / Execution Cost
+
+**Verify the auto-provisioned slot KPIs exist:**
 ```bash
 olakai kpis list --agent-id YOUR_AGENT_ID
-# Look for "time_saved_estimator" with scope CHAT and calculatorId "classifier"
+# Look for slot KPIs: Execution Cost, Time Saved, Value Created, Governance Compliance
 ```
 
-**If missing (e.g., agent created via CLI), add it manually:**
+**If the Time Saved classifier is missing (e.g., agent created via CLI), add it manually:**
 ```bash
 olakai kpis create --name "Time Saved" \
   --calculator-id classifier --template-id time_saved_estimator \
   --scope CHAT --agent-id YOUR_AGENT_ID
 ```
 
-**ROI Calculation:**
-```
-ROI Value = SUM(timeSavedMinutes * fteHourlyCost / 60)
-```
-- Default hourly rate: $55/hour
-- Configure a custom rate in the agent's ROI tab on the dashboard
-
-**Setting the hourly rate for meaningful ROI:**
+**Configuring Assumptions for meaningful metrics:**
 1. Navigate to your agent in the Olakai dashboard
-2. Go to the **ROI** tab
-3. Set the FTE hourly cost to match your organization's rate
-4. ROI values will update on subsequent events
+2. Open the **Assumptions** panel on the agent detail page
+3. Set the FTE hourly cost to match your organization's rate (default: $55/hour)
+4. Set the token cost rate if needed
+5. Slot KPI values will update on subsequent events
+
+**Overriding slot formulas:**
+Slot KPIs use sensible defaults, but you can override the formula while keeping the enforced output unit. For example, override Execution Cost to use your actual billing data instead of the token-based estimate.
 
 #### Custom Formula KPIs
 
