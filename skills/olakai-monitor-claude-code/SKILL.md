@@ -15,7 +15,7 @@ description: |
 license: MIT
 metadata:
   author: olakai
-  version: "1.13.0"
+  version: "1.13.1"
 ---
 
 # Monitor Claude Code with Olakai
@@ -24,7 +24,7 @@ This skill sets up hooks-based monitoring for Claude Code local agents. Once con
 
 **What you get:**
 - Activity tracking in the **Agent IQ > Local Agents** tab
-- Session-level metrics (tokens, duration, turns, model)
+- Session-level metrics (tokens, turns, model)
 - KPI evaluation on local agent traffic (Time Saved, Value Created, Governance Compliance)
 - Governance signals and policy enforcement
 
@@ -111,26 +111,32 @@ olakai activity get EVENT_ID --json | jq '{source, customData}'
 Confirm:
 - Event exists and has recent timestamp
 - `source` is `"claude-code"`
-- `customData` contains session metadata (stop_reason, duration_ms, num_turns)
+- `prompt`, `response`, `tokens`, and `modelName` are populated (not empty/null)
+- `customData` contains session metadata (sessionId, numTurns, inputTokens, outputTokens)
 
 ## What Gets Tracked
 
-The Stop hook fires at the end of each Claude Code session and captures:
+The Stop hook fires at the end of each Claude Code turn. It reads Claude Code's transcript JSONL file (at `transcript_path` from the hook event) and extracts:
 
 | Field | Description |
 |-------|-------------|
-| Prompt text | The user's input to Claude Code |
-| Response text | Claude Code's output |
-| Session ID | `chatId` for grouping turns in the same conversation |
-| Model name | The model used (e.g., `claude-sonnet-4-20250514`) |
-| Input tokens | Token count for the prompt |
-| Output tokens | Token count for the response |
-| Duration | Session duration in milliseconds |
-| Number of turns | How many back-and-forth exchanges occurred |
-| Stop reason | Why the session ended (e.g., user stopped, task complete) |
-| Source tag | `source: "claude-code"` — identifies this as local agent traffic |
+| `prompt` | Last non-meta user message in the session transcript |
+| `response` | Last assistant message text (tool-only turns preserve the prior text response) |
+| `chatId` | Claude Code `session_id` — groups all turns of a conversation |
+| `modelName` | Model from the last assistant message (e.g., `claude-sonnet-4-5`) |
+| `tokens` | Input (incl. cache_creation + cache_read) + output tokens from last turn's `usage` |
+| `customData.inputTokens` / `outputTokens` | Last turn's usage broken down |
+| `customData.numTurns` | Count of non-sidechain assistant messages in the session |
+| `customData.sessionId` / `transcriptPath` / `cwd` / `stopHookActive` / `hookEvent` | Raw Stop event metadata |
+| `source` | Top-level `"claude-code"` tag |
 
 All of this is captured automatically by the hook. No SDK code or manual instrumentation is needed.
+
+**Notes on token counts**: Token totals include cache tokens (cache_creation + cache_read) because real Claude Code sessions typically show very high cache-read volume (tens of thousands) vs tiny uncached input. Excluding cache would massively under-report billable volume.
+
+**Fields not captured**: Claude Code's Stop hook does not expose `duration`, `stop_reason`, or `total_cost`. These are omitted rather than fabricated. If future Claude Code versions expose them via the hook event or transcript, they can be added.
+
+**Debug mode**: Set `OLAKAI_MONITOR_DEBUG=1` in your environment to log the raw stdin payload and constructed monitoring payload to `/tmp/olakai-monitor-debug-<pid>.log`. Useful when events aren't arriving or look wrong. Turn off when done (no-op by default so hooks stay fast and silent).
 
 ## KPI Configuration
 
@@ -255,6 +261,17 @@ To re-enable later, run `olakai monitor init` again.
 2. Verify `.claude/settings.json` contains the Stop hook entry
 3. Verify `.claude/olakai-monitor.json` exists and has a valid API key
 4. Confirm you completed at least one Claude Code task after setup (the hook fires on Stop, not on Start)
+5. For deep diagnostics, enable debug mode: `export OLAKAI_MONITOR_DEBUG=1` then do a Claude Code turn. Inspect `/tmp/olakai-monitor-debug-<pid>.log` to see the raw Stop event from stdin and the constructed monitoring payload.
+
+### Events appear but `prompt`, `response`, `tokens`, or `modelName` are empty/null
+
+This means the transcript file at `transcript_path` could not be read or parsed. Common causes:
+
+- CLI version older than `0.1.15` — earlier versions tried to extract fields directly from the Stop event (which doesn't contain them). Upgrade: `npm install -g olakai-cli@latest`
+- Transcript file moved or deleted between the turn ending and the hook running
+- Transcript JSONL format changed in a newer Claude Code version
+
+Enable `OLAKAI_MONITOR_DEBUG=1` to see whether transcript reading succeeded. Look for `transcript-read-failed` or `transcript-parsed` entries in the debug log.
 
 ### Events appear but no KPIs
 
