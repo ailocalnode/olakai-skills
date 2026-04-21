@@ -15,7 +15,7 @@ description: |
 license: MIT
 metadata:
   author: olakai
-  version: "1.13.1"
+  version: "1.14.0"
 ---
 
 # Monitor Claude Code with Olakai
@@ -65,10 +65,12 @@ olakai monitor init
 
 **What it does:**
 1. Creates an agent with `AgentSource.CLAUDE_CODE` on your Olakai account
-2. Writes a Stop hook entry to `.claude/settings.json`
+2. Writes `Stop` and `SubagentStop` hook entries to `.claude/settings.json` (both by default since CLI v0.2.0)
 3. Saves configuration to `.claude/olakai-monitor.json` (API key, agent ID, endpoint)
 
 The command is interactive — it will prompt for an agent name if one is not provided.
+
+> **Re-running `olakai monitor init`**: Settings-merge preserves any user-customized Olakai hook commands (e.g., if you edited a hook to prefix `OLAKAI_MONITOR_DEBUG=1 olakai monitor hook stop`). It will not overwrite manually-edited commands. For a clean reinstall that refreshes hook commands, run `olakai monitor disable` first, then `olakai monitor init`.
 
 ### Step 2: Verify setup
 
@@ -77,13 +79,13 @@ olakai monitor status
 ```
 
 Expected output confirms:
-- Hook is registered in `.claude/settings.json`
+- `Stop` and `SubagentStop` hooks are registered in `.claude/settings.json`
 - Config file exists at `.claude/olakai-monitor.json`
 - Agent ID and endpoint are valid
 
 ### Step 3: Do some work
 
-Use Claude Code normally — write code, debug, refactor, research. Each session automatically sends an event when Claude Code stops (the Stop hook fires).
+Use Claude Code normally — write code, debug, refactor, research. Each session automatically sends an event when Claude Code stops (the `Stop` hook fires) and when any subagent finishes (the `SubagentStop` hook fires).
 
 ### Step 4: Validate events
 
@@ -99,7 +101,7 @@ Replace `AGENT_ID` with the ID shown by `olakai monitor status`.
 ### Golden Rule: Test, Fetch, Validate
 
 ```bash
-# 1. Complete a Claude Code task (generates an event via the Stop hook)
+# 1. Complete a Claude Code task (generates an event via the Stop/SubagentStop hook)
 
 # 2. Fetch the latest event
 olakai activity list --agent-id AGENT_ID --limit 1 --json
@@ -112,11 +114,16 @@ Confirm:
 - Event exists and has recent timestamp
 - `source` is `"claude-code"`
 - `prompt`, `response`, `tokens`, and `modelName` are populated (not empty/null)
-- `customData` contains session metadata (sessionId, numTurns, inputTokens, outputTokens)
+- `customData` contains session metadata (sessionId, numTurns, inputTokens, outputTokens, latencyMs; plus `subagent` on SubagentStop events and `skill` when the turn started with a slash-command)
 
 ## What Gets Tracked
 
-The Stop hook fires at the end of each Claude Code turn. It reads Claude Code's transcript JSONL file (at `transcript_path` from the hook event) and extracts:
+Two hooks are installed by default:
+
+- **Stop hook** — fires at the end of each top-level Claude Code turn
+- **SubagentStop hook** — fires when a subagent (launched via the Agent tool) finishes
+
+Both hooks read Claude Code's transcript JSONL file (at `transcript_path` from the hook event) and extract:
 
 | Field | Description |
 |-------|-------------|
@@ -127,14 +134,17 @@ The Stop hook fires at the end of each Claude Code turn. It reads Claude Code's 
 | `tokens` | Input (incl. cache_creation + cache_read) + output tokens from last turn's `usage` |
 | `customData.inputTokens` / `outputTokens` | Last turn's usage broken down |
 | `customData.numTurns` | Count of non-sidechain assistant messages in the session |
-| `customData.sessionId` / `transcriptPath` / `cwd` / `stopHookActive` / `hookEvent` | Raw Stop event metadata |
+| `customData.latencyMs` | Integer milliseconds from the user message timestamp to the assistant response timestamp in the transcript (added in CLI v0.2.0) |
+| `customData.subagent` | Subagent name, set only on `SubagentStop` events (added in CLI v0.2.0) |
+| `customData.skill` | Slash-command skill name, set when the user turn begins with `/<skill>` (e.g., `/olakai-troubleshoot`) (added in CLI v0.2.0) |
+| `customData.sessionId` / `transcriptPath` / `cwd` / `stopHookActive` / `hookEvent` | Raw hook event metadata |
 | `source` | Top-level `"claude-code"` tag |
 
-All of this is captured automatically by the hook. No SDK code or manual instrumentation is needed.
+All of this is captured automatically by the hooks. No SDK code or manual instrumentation is needed.
 
 **Notes on token counts**: Token totals include cache tokens (cache_creation + cache_read) because real Claude Code sessions typically show very high cache-read volume (tens of thousands) vs tiny uncached input. Excluding cache would massively under-report billable volume.
 
-**Fields not captured**: Claude Code's Stop hook does not expose `duration`, `stop_reason`, or `total_cost`. These are omitted rather than fabricated. If future Claude Code versions expose them via the hook event or transcript, they can be added.
+**Fields not captured**: Claude Code's Stop/SubagentStop hooks do not expose `stop_reason` or `total_cost`. These are omitted rather than fabricated. (As of CLI v0.2.0, `latencyMs` is derived from transcript user/assistant timestamps and is captured.) If future Claude Code versions expose additional fields via the hook event or transcript, they can be added.
 
 **Debug mode**: Set `OLAKAI_MONITOR_DEBUG=1` in your environment to log the raw stdin payload and constructed monitoring payload to `/tmp/olakai-monitor-debug-<pid>.log`. Useful when events aren't arriving or look wrong. Turn off when done (no-op by default so hooks stay fast and silent).
 
@@ -243,7 +253,7 @@ olakai monitor disable
 ```
 
 **What this does:**
-- Removes the Stop hook from `.claude/settings.json`
+- Removes the `Stop` and `SubagentStop` hooks from `.claude/settings.json`
 - Removes `.claude/olakai-monitor.json`
 
 **What this does NOT do:**
@@ -258,16 +268,16 @@ To re-enable later, run `olakai monitor init` again.
 ### No events appearing
 
 1. Check hook status: `olakai monitor status`
-2. Verify `.claude/settings.json` contains the Stop hook entry
+2. Verify `.claude/settings.json` contains the `Stop` and `SubagentStop` hook entries
 3. Verify `.claude/olakai-monitor.json` exists and has a valid API key
-4. Confirm you completed at least one Claude Code task after setup (the hook fires on Stop, not on Start)
+4. Confirm you completed at least one Claude Code task after setup (the hooks fire on Stop/SubagentStop, not on Start)
 5. For deep diagnostics, enable debug mode: `export OLAKAI_MONITOR_DEBUG=1` then do a Claude Code turn. Inspect `/tmp/olakai-monitor-debug-<pid>.log` to see the raw Stop event from stdin and the constructed monitoring payload.
 
 ### Events appear but `prompt`, `response`, `tokens`, or `modelName` are empty/null
 
 This means the transcript file at `transcript_path` could not be read or parsed. Common causes:
 
-- CLI version older than `0.1.15` — earlier versions tried to extract fields directly from the Stop event (which doesn't contain them). Upgrade: `npm install -g olakai-cli@latest`
+- CLI version older than `0.2.0` — earlier versions tried to extract fields directly from the Stop event (which doesn't contain them), and versions prior to `0.2.0` did not install the `SubagentStop` hook or capture `latencyMs`/`subagent`/`skill` customData. Upgrade: `npm install -g olakai-cli@latest`
 - Transcript file moved or deleted between the turn ending and the hook running
 - Transcript JSONL format changed in a newer Claude Code version
 
