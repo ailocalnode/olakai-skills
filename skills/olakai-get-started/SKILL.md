@@ -132,7 +132,7 @@ npm install -g olakai-cli
 
 ```bash
 olakai --version
-# Should output: olakai-cli/0.1.x
+# Should output: olakai-cli/0.2.x
 ```
 
 ### 2.3 Troubleshooting Installation

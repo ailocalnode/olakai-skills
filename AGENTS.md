@@ -504,7 +504,7 @@ The authoritative source for current published SDK/CLI versions is:
 **Current versions** (last updated March 2026):
 - TypeScript SDK: `@olakai/sdk` v2.3.0
 - Python SDK: `olakai-sdk` v1.3.0 (PyPI)
-- CLI: `olakai-cli` v0.1.12
+- CLI: `olakai-cli` v0.2.0
 
 > **Note**: Both SDKs now auto-capture `modelName` from LLM responses and the platform uses model-based pricing for execution cost calculation.
 
