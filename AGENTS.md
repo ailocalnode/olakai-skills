@@ -25,8 +25,12 @@ olakai-skills/
 │   │   └── SKILL.md              # Add monitoring to existing code (~680 lines)
 │   ├── olakai-troubleshoot/
 │   │   └── SKILL.md              # Diagnose and fix issues (~610 lines)
-│   └── olakai-reports/
-│       └── SKILL.md              # Generate CLI-based analytics reports (~500 lines)
+│   ├── olakai-reports/
+│   │   └── SKILL.md              # Generate CLI-based analytics reports (~500 lines)
+│   ├── olakai-monitor-local-coding-agent/
+│   │   └── SKILL.md              # Hooks-based monitoring for Claude Code, Codex CLI, Cursor (~400 lines)
+│   └── olakai-monitor-claude-code/
+│       └── SKILL.md              # Redirect stub — points to olakai-monitor-local-coding-agent
 ├── plugins/
 │   └── olakai/                   # Claude Code plugin directory
 │       ├── .claude-plugin/
@@ -40,7 +44,9 @@ olakai-skills/
 │           ├── olakai-integrate -> ../../../skills/olakai-integrate
 │           ├── olakai-troubleshoot -> ../../../skills/olakai-troubleshoot
 │           ├── olakai-reports -> ../../../skills/olakai-reports
-│           └── olakai-planning -> ../../../skills/olakai-planning
+│           ├── olakai-planning -> ../../../skills/olakai-planning
+│           ├── olakai-monitor-local-coding-agent -> ../../../skills/olakai-monitor-local-coding-agent
+│           └── olakai-monitor-claude-code -> ../../../skills/olakai-monitor-claude-code  (redirect stub)
 ├── .claude-plugin/
 │   └── marketplace.json          # Root marketplace manifest
 ├── hooks/                        # Optional skill activation hooks
@@ -79,6 +85,8 @@ olakai-skills/
 | `olakai-troubleshoot` | ~610 | Diagnose and fix issues with events, KPIs, custom data, or SDK integration |
 | `olakai-reports` | ~500 | Generate usage summaries, KPI trends, ROI reports from the terminal |
 | `olakai-planning` | ~350 | Create detailed implementation plans that can be executed independently |
+| `olakai-monitor-local-coding-agent` | ~400 | Hooks-based monitoring for local coding agents — Claude Code, Codex CLI, Cursor (`olakai monitor init --tool <tool>`) |
+| `olakai-monitor-claude-code` | ~10 | Redirect stub — points to `olakai-monitor-local-coding-agent` (kept so existing references resolve) |
 
 Each skill follows YAML frontmatter + Markdown format with:
 - `name`: Skill identifier
@@ -236,6 +244,7 @@ Before answering Olakai-related questions, evaluate whether to load a skill:
 | **Not set up yet** | `olakai-get-started` | get started, setup, install, signup, account, new to olakai |
 | Build new AI agent | `olakai-new-project` | create, new, build, start, design agent |
 | Add monitoring to existing code | `olakai-integrate` | add, integrate, existing, wrap, instrument |
+| Monitor a local coding agent (Claude Code, Codex CLI, Cursor) | `olakai-monitor-local-coding-agent` | monitor claude code, monitor codex, monitor cursor, olakai monitor init, local coding agent, hooks |
 | Something not working | `olakai-troubleshoot` | not working, error, missing, wrong, null, debug |
 | View data/metrics | `olakai-reports` | report, analytics, summary, trends, usage |
 | Create implementation plan | `olakai-planning` | plan, steps, roadmap, architecture, design, plan mode |
@@ -422,6 +431,16 @@ olakai custom-data create --agent-id ID --name "Name" --type NUMBER|STRING [--de
 
 # Workflows
 olakai workflows create --name "Name"
+
+# Local Coding Agent Monitoring (hooks-based)
+olakai monitor init --tool claude-code|codex|cursor      # Install hooks for the chosen tool
+olakai monitor status --tool claude-code|codex|cursor    # Verify hook + config installation
+olakai monitor disable --tool claude-code|codex|cursor   # Remove hooks and local config
+olakai monitor hook <event> --tool claude-code|codex|cursor  # Internal hook invoker (called by the registered hook command)
+# OLAKAI_MONITOR_DEBUG=1 enables dispatcher/posting, dispatcher/posted (status + 500-byte response preview),
+# and dispatcher/post-error events at /tmp/olakai-monitor-debug-<pid>.log.
+# When picking an existing agent during init, the CLI calls GET /api/monitoring/prompt/me with the
+# pasted key and aborts (default n) if the resolved agent doesn't match the picked one.
 ```
 
 ### SDK Patterns Referenced in Skills
