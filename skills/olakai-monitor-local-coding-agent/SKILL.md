@@ -89,7 +89,7 @@ olakai monitor init --tool claude-code
 **What it does:**
 1. Creates an agent with `AgentSource.CLAUDE_CODE` on your Olakai account
 2. Writes `Stop` and `SubagentStop` hook entries to `.claude/settings.json`
-3. Saves configuration to `.claude/olakai-monitor.json` (API key, agent ID, endpoint)
+3. Saves configuration to `.olakai/monitor-claude-code.json` (API key, agent ID, endpoint). Pre-Stage-2 installs at `.claude/olakai-monitor.json` are auto-migrated on first read.
 
 The command is interactive — it prompts for an agent name if one is not provided, and lets you pick an existing agent or create a new one.
 
@@ -101,7 +101,7 @@ The command is interactive — it prompts for an agent name if one is not provid
 olakai monitor status --tool claude-code
 ```
 
-Confirms `Stop` and `SubagentStop` hooks are registered in `.claude/settings.json` and the config at `.claude/olakai-monitor.json` is valid.
+Confirms `Stop` and `SubagentStop` hooks are registered in `.claude/settings.json` and the config at `.olakai/monitor-claude-code.json` is valid.
 
 ### What gets captured (Claude Code)
 
@@ -141,8 +141,8 @@ olakai monitor init --tool codex
 
 **What it does:**
 1. Creates an agent with `AgentSource.CODEX` on your Olakai account
-2. Writes hook entries to Codex's hooks config file (Codex's standard location, e.g. `~/.codex/hooks.toml` for global or workspace-local equivalent depending on your Codex setup)
-3. Saves configuration to `.olakai/codex-monitor.json` (API key, agent ID, endpoint)
+2. Writes a `Stop` hook entry into the inline `[hooks]` block of `~/.codex/config.toml` (the canonical Codex configuration file). Comment-preserving TOML serialization isn't supported by `@iarna/toml`, so existing comments in your `~/.codex/config.toml` may be reformatted on first install — the CLI prints a warning when this happens.
+3. Saves configuration to `.olakai/monitor-codex.json` (API key, agent ID, endpoint)
 
 > **Codex CLI ≥ 0.124.0 is required.** The hooks API was unstable in earlier Codex versions; the integration is only validated from `0.124.0` onward. Check with `codex --version` before running init.
 
@@ -174,8 +174,8 @@ olakai monitor init --tool cursor
 
 **What it does:**
 1. Creates an agent with `AgentSource.CURSOR` on your Olakai account
-2. Writes hook entries to Cursor's hooks config (Cursor's standard hook location for the workspace)
-3. Saves configuration to `.olakai/cursor-monitor.json` (API key, agent ID, endpoint)
+2. Writes `beforeSubmitPrompt`, `afterAgentResponse`, `sessionEnd`, and `stop` hook entries to `~/.cursor/hooks.json` (per-user install)
+3. Saves configuration to `.olakai/monitor-cursor.json` (API key, agent ID, endpoint)
 
 > **Cursor ≥ 1.7 is required and the Cursor hooks API is in beta.** The integration is validated against Cursor `3.x` but the upstream hook contract may shift. If hooks stop firing after a Cursor update, see [Troubleshooting](#troubleshooting).
 
@@ -331,7 +331,7 @@ olakai monitor disable --tool cursor
 
 **What this does:**
 - Removes the registered hooks from the tool's settings file
-- Removes the corresponding `olakai-monitor.json` / `codex-monitor.json` / `cursor-monitor.json`
+- Removes the corresponding `monitor-claude-code.json` / `monitor-codex.json` / `monitor-cursor.json` (and any legacy `.claude/olakai-monitor.json`)
 
 **What this does NOT do:**
 - Does not delete the agent record on Olakai
@@ -395,7 +395,7 @@ olakai kpis create --name "Time Saved" \
 
 The hook is designed to fail silently — errors in the monitoring hook should never interrupt your local agent session. If you suspect issues:
 
-1. Check config exists: `cat .claude/olakai-monitor.json` (or the Codex/Cursor equivalent)
+1. Check config exists: `cat .olakai/monitor-claude-code.json` (or the Codex/Cursor equivalent: `.olakai/monitor-codex.json`, `.olakai/monitor-cursor.json`)
 2. Verify API key is valid: `olakai agents get AGENT_ID --json | jq '.apiKey'`
 3. Test connectivity: `olakai whoami`
 
