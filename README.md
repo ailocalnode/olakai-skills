@@ -39,6 +39,7 @@ git clone https://github.com/olakai-ai/olakai-skills .claude/skills/olakai-skill
 | **olakai-integrate** | Add Olakai to existing AI code with minimal changes |
 | **olakai-troubleshoot** | Diagnose and fix issues with events, KPIs, or SDK integration |
 | **olakai-reports** | Generate usage summaries, KPI trends, ROI reports from the terminal |
+| **olakai-monitor-local-coding-agent** | Hooks-based monitoring for local coding agents — Claude Code, Codex CLI, Cursor (`olakai monitor init --tool <tool>`) |
 
 ## Bundled Agent
 
