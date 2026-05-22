@@ -352,6 +352,7 @@ olakai kpis create \
   --agent-id AGENT_ID \
   --calculator-id formula \
   --formula "IF(Complexity = \"complex\", 1, 0)" \
+  --scope PROMPT_REQUEST \
   --aggregation SUM
 ```
 

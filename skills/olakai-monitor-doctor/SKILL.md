@@ -81,7 +81,7 @@ olakai agents mine --source codex --json
 | 1 | `registry-entry` | This workspace is recorded in `~/.olakai/registry.json` | Never inited here, or registry wiped → `--fix` adopts the on-disk config into the registry |
 | 2 | `config-valid` | `.olakai/monitor-<tool>.json` exists and parses (key, agentId, endpoint) | Missing/corrupt config → `monitor repair` re-writes it |
 | 3 | `hooks-installed` | The tool's settings file has the Olakai hook entries | Hooks removed or a settings edit clobbered them → `--fix` re-merges them |
-| 4 | `api-key-valid` | The stored key authenticates (`GET /api/monitoring/prompt/me`) | Key revoked/rotated → `--fix` re-links a fresh key; if it resolves to a *different* agent it's reported, not silently swapped |
+| 4 | `api-key-valid` | The stored key authenticates (`GET /api/monitoring/prompt/me`) | Key revoked/rotated → `--fix` rotates a fresh key on the *same* agent and rewrites the config (cross-wired-key detection is a `monitor init` feature, not `doctor`) |
 | 5 | `agent-exists` | The linked agent still exists on the backend | Agent deleted (404) → recreation is **gated** behind `--recreate-missing` or `repair` (so a transient 404 can't spawn a duplicate) |
 | 6 | `events-flowing` | Recent events exist for this agent (metadata probe) | Hooks installed but never fired → run a turn, then re-check; if still empty see the unattributed-activity caveat below |
 
