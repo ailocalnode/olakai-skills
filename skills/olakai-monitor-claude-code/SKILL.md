@@ -9,7 +9,7 @@ description: |
 license: MIT
 metadata:
   author: olakai
-  version: "1.15.0"
+  version: "1.16.0"
 ---
 
 # Renamed: olakai-monitor-claude-code → olakai-monitor-local-coding-agent

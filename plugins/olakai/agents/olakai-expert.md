@@ -16,7 +16,7 @@ description: >
 
   DO NOT load for: general DevOps monitoring (Datadog, Grafana), generic
   TypeScript/Python questions, or non-AI observability tools.
-skills: olakai-get-started, olakai-new-project, olakai-integrate, olakai-troubleshoot, olakai-reports, olakai-planning, olakai-monitor-local-coding-agent
+skills: olakai-get-started, olakai-new-project, olakai-integrate, olakai-troubleshoot, olakai-reports, olakai-planning, olakai-monitor-local-coding-agent, olakai-monitor-doctor
 tools: Read, Grep, Glob, Bash, Edit, Write
 model: inherit
 ---
@@ -167,7 +167,8 @@ olakai whoami 2>/dev/null || echo "NOT_AUTHENTICATED"
 | Wants to build new agent | `olakai-new-project` |
 | Has existing AI code to monitor | `olakai-integrate` |
 | Wants to monitor a local coding agent (Claude Code, Codex CLI, Cursor) | `olakai-monitor-local-coding-agent` |
-| Something not working | `olakai-troubleshoot` |
+| Coding-tool monitoring broken (no events, 404 agent, drift) | `olakai-monitor-doctor` |
+| Something not working (SDK / KPI / event issues) | `olakai-troubleshoot` |
 | Wants usage/analytics data | `olakai-reports` |
 | Creating a multi-step plan | `olakai-planning` |
 

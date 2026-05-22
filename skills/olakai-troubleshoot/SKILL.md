@@ -18,12 +18,14 @@ description: >
 license: MIT
 metadata:
   author: olakai
-  version: "1.12.0"
+  version: "1.16.0"
 ---
 
 # Troubleshoot Olakai Agent Monitoring
 
 This skill helps diagnose and fix common issues with Olakai AI agent monitoring, KPI calculations, and SDK integration.
+
+> **Monitoring a coding tool (Claude Code / Cursor / Codex) rather than your own SDK code?** This skill is for SDK/API issues. For a local coding agent's hooks-based monitoring (no events, deleted/404 agent, drifted config), run `olakai monitor doctor --tool <tool>` and use the **`olakai-monitor-doctor`** skill (setup lives in **`olakai-monitor-local-coding-agent`**).
 
 For full documentation, see: https://app.olakai.ai/llms.txt
 
