@@ -28,7 +28,9 @@ olakai-skills/
 │   ├── olakai-reports/
 │   │   └── SKILL.md              # Generate CLI-based analytics reports (~500 lines)
 │   ├── olakai-monitor-local-coding-agent/
-│   │   └── SKILL.md              # Hooks-based monitoring for Claude Code, Codex CLI, Cursor (~400 lines)
+│   │   └── SKILL.md              # Setup + routing for Claude Code, Codex CLI, Cursor monitoring (~500 lines)
+│   ├── olakai-monitor-doctor/
+│   │   └── SKILL.md              # Self-heal monitoring: list / doctor / repair (~220 lines)
 │   └── olakai-monitor-claude-code/
 │       └── SKILL.md              # Redirect stub — points to olakai-monitor-local-coding-agent
 ├── plugins/
@@ -46,6 +48,7 @@ olakai-skills/
 │           ├── olakai-reports -> ../../../skills/olakai-reports
 │           ├── olakai-planning -> ../../../skills/olakai-planning
 │           ├── olakai-monitor-local-coding-agent -> ../../../skills/olakai-monitor-local-coding-agent
+│           ├── olakai-monitor-doctor -> ../../../skills/olakai-monitor-doctor
 │           └── olakai-monitor-claude-code -> ../../../skills/olakai-monitor-claude-code  (redirect stub)
 ├── .claude-plugin/
 │   └── marketplace.json          # Root marketplace manifest
@@ -85,7 +88,8 @@ olakai-skills/
 | `olakai-troubleshoot` | ~610 | Diagnose and fix issues with events, KPIs, custom data, or SDK integration |
 | `olakai-reports` | ~500 | Generate usage summaries, KPI trends, ROI reports from the terminal |
 | `olakai-planning` | ~350 | Create detailed implementation plans that can be executed independently |
-| `olakai-monitor-local-coding-agent` | ~400 | Hooks-based monitoring for local coding agents — Claude Code, Codex CLI, Cursor (`olakai monitor init --tool <tool>`) |
+| `olakai-monitor-local-coding-agent` | ~500 | Setup + routing for local coding agent monitoring — Claude Code, Codex CLI, Cursor (`olakai monitor init --tool <tool>`), two-lens model, scope honesty |
+| `olakai-monitor-doctor` | ~220 | Self-heal monitoring — `olakai monitor list` / `doctor [--fix]` / `repair`, drift diagnosis, agent lifecycle |
 | `olakai-monitor-claude-code` | ~10 | Redirect stub — points to `olakai-monitor-local-coding-agent` (kept so existing references resolve) |
 
 Each skill follows YAML frontmatter + Markdown format with:
@@ -245,7 +249,8 @@ Before answering Olakai-related questions, evaluate whether to load a skill:
 | Build new AI agent | `olakai-new-project` | create, new, build, start, design agent |
 | Add monitoring to existing code | `olakai-integrate` | add, integrate, existing, wrap, instrument |
 | Monitor a local coding agent (Claude Code, Codex CLI, Cursor) | `olakai-monitor-local-coding-agent` | monitor claude code, monitor codex, monitor cursor, olakai monitor init, local coding agent, hooks |
-| Something not working | `olakai-troubleshoot` | not working, error, missing, wrong, null, debug |
+| Diagnose / repair a coding tool's own monitoring | `olakai-monitor-doctor` | monitor doctor, monitor repair, monitor list, no events claude code/codex/cursor, fix monitoring, agent 404, agents mine |
+| Something not working (SDK / KPI / event issues) | `olakai-troubleshoot` | not working, error, missing, wrong, null, debug |
 | View data/metrics | `olakai-reports` | report, analytics, summary, trends, usage |
 | Create implementation plan | `olakai-planning` | plan, steps, roadmap, architecture, design, plan mode |
 
@@ -410,6 +415,10 @@ olakai agents list [--json]
 olakai agents create --name "Name" [--description "Desc"] [--with-api-key] [--json]
 olakai agents get AGENT_ID [--json]
 olakai agents update AGENT_ID [--name "Name"] [--workflow WORKFLOW_ID]
+olakai agents mine [--source claude-code|codex|cursor] [--json]   # account-wide: your coding agents (>= 0.7.0)
+olakai agents archive AGENT_ID [--unarchive]                      # archive/unarchive (>= 0.7.0, needs current backend)
+olakai agents rename AGENT_ID "New Name"                          # rename (>= 0.7.0, needs current backend)
+olakai agents delete AGENT_ID                                     # permanent delete
 
 # Activity
 olakai activity list [--limit N] [--agent-id ID] [--json]
@@ -437,10 +446,29 @@ olakai monitor init --tool claude-code|codex|cursor      # Install hooks for the
 olakai monitor status --tool claude-code|codex|cursor    # Verify hook + config installation
 olakai monitor disable --tool claude-code|codex|cursor   # Remove hooks and local config
 olakai monitor hook <event> --tool claude-code|codex|cursor  # Internal hook invoker (called by the registered hook command)
+# --- Visibility + self-healing (require olakai-cli >= 0.7.0) ---
+olakai monitor list [--json]                             # MACHINE lens: every monitored workspace on this box,
+                                                         #   grouped by tool, with scope + agent + drift flag.
+                                                         #   Reads local registry ~/.olakai/registry.json.
+olakai monitor doctor [--tool <t>] [--all] [--fix] [--recreate-missing] [--json]
+                                                         # Ordered check chain: registry-entry -> config-valid ->
+                                                         #   hooks-installed -> api-key-valid -> agent-exists ->
+                                                         #   events-flowing. --fix is idempotent/best-effort
+                                                         #   (adopts registry, re-merges hooks, re-links a rejected
+                                                         #   key). Agent recreation on 404 gated behind
+                                                         #   --recreate-missing. --all runs every workspace.
+olakai monitor repair --tool <t>                         # Forceful re-init preserving agent linkage: always
+                                                         #   re-merges hooks, migrates legacy config, re-links key
+                                                         #   only if invalid, recreates agent only on a true 404.
 # OLAKAI_MONITOR_DEBUG=1 enables dispatcher/posting, dispatcher/posted (status + 500-byte response preview),
 # and dispatcher/post-error events at /tmp/olakai-monitor-debug-<pid>.log.
 # When picking an existing agent during init, the CLI calls GET /api/monitoring/prompt/me with the
 # pasted key and aborts (default n) if the resolved agent doesn't match the picked one.
+# Scope is honest per tool: Claude Code installs hooks at the WORKSPACE level (.claude/settings.json);
+# Codex and Cursor install hooks GLOBALLY (~/.codex/config.toml, ~/.cursor/hooks.json). Per-workspace
+# agent linkage for all three lives in .olakai/monitor-<tool>.json. Because Codex/Cursor hooks are global,
+# their hook fires in workspaces with no .olakai config and silent-exits (activity NOT attributed to any
+# agent) — that is why "where am I monitoring" is a machine-local fact tracked in ~/.olakai/registry.json.
 ```
 
 ### SDK Patterns Referenced in Skills
@@ -510,7 +538,7 @@ olakai_event(OlakaiEventParams(prompt=str, response=str, tokens=int, requestTime
 
 When bumping version in `plugins/olakai/.claude-plugin/plugin.json`:
 
-1. Update version number (currently 1.4.0)
+1. Update version number (currently 1.15.0)
 2. Update version in all SKILL.md frontmatter metadata
 3. Ensure all SKILL.md files are in sync with current CLI/SDK versions
 4. Update changelog if maintained
@@ -526,6 +554,8 @@ The authoritative source for current published SDK/CLI versions is:
 - CLI: `olakai-cli` v0.2.0
 
 > **Note**: Both SDKs now auto-capture `modelName` from LLM responses and the platform uses model-based pricing for execution cost calculation.
+
+> **CLI ≥ 0.7.0 required for new monitor commands.** `olakai monitor list`, `olakai monitor doctor [--fix]`, `olakai monitor repair`, and `olakai agents mine|archive|rename` are documented in the monitor skills against **olakai-cli ≥ 0.7.0** (the release introducing them). This minimum was written before the CLI was published — **reconcile the exact published version** in `local-coding-agent` / `monitor-doctor` skills and here when olakai-cli actually ships these commands.
 
 When SDK or CLI releases occur, verify that code examples in SKILL.md files are compatible with the new version.
 

@@ -11,7 +11,8 @@ Official plugin for integrating AI agents with [Olakai](https://olakai.ai) - the
 | **olakai-integrate** | Add Olakai to existing AI code with minimal changes |
 | **olakai-troubleshoot** | Diagnose and fix issues with events, KPIs, or SDK integration |
 | **olakai-reports** | Generate usage summaries, KPI trends, ROI reports from the terminal |
-| **olakai-monitor-local-coding-agent** | Hooks-based monitoring for local coding agents — Claude Code, Codex CLI, Cursor (`olakai monitor init --tool <tool>`) |
+| **olakai-monitor-local-coding-agent** | Set up hooks-based monitoring for local coding agents — Claude Code, Codex CLI, Cursor (`olakai monitor init --tool <tool>`) |
+| **olakai-monitor-doctor** | Self-heal a coding tool's monitoring — `olakai monitor list` / `doctor [--fix]` / `repair` |
 
 ## Agent Included
 

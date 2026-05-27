@@ -1,30 +1,46 @@
 ---
 name: olakai-monitor-local-coding-agent
 description: |
-  Set up Olakai monitoring for local coding agents — Claude Code, Codex CLI, or Cursor —
-  via hooks. Configures the agent record, installs the right hooks for the chosen tool,
-  and explains how to enrich events with KPIs.
+  Set up and self-heal Olakai monitoring for the coding tool you are using —
+  Claude Code, OpenAI Codex CLI, or Cursor. Installs hooks, creates the agent
+  record, and explains how to enrich events with KPIs. This is the skill for
+  "monitor my coding tool itself" (not for instrumenting your own agent's source
+  code with the SDK — that is olakai-integrate).
   AUTO-INVOKE when user wants to: monitor Claude Code / Codex / Cursor sessions,
-  add observability to local coding agents, track local AI usage, set up olakai
-  monitoring in this workspace, observe local agent activity, or enable hooks-based
-  monitoring for any local coding agent.
-  TRIGGER KEYWORDS: olakai monitor, local agent, monitor claude code, monitor codex,
-  monitor cursor, codex cli, cursor hooks, track sessions, local agent monitoring,
-  observe local agent, olakai hooks, olakai monitor init, monitor workspace,
-  local AI tracking, claude code monitoring, codex monitoring, cursor monitoring,
-  local coding agent.
-  DO NOT load for: adding monitoring to custom SDK code (use olakai-integrate),
+  monitor THIS coding tool, add observability to a local coding agent, track my
+  own coding-assistant usage, set up olakai monitoring in this workspace, see
+  what is being monitored on this machine, check if monitoring is working, or
+  enable / repair hooks-based monitoring for any local coding agent.
+  TRIGGER KEYWORDS: olakai monitor, monitor my coding tool, monitor this tool,
+  monitor claude code, monitor codex, monitor cursor, codex cli, cursor hooks,
+  local coding agent, local agent monitoring, olakai hooks, olakai monitor init,
+  olakai monitor list, olakai monitor doctor, olakai monitor repair, monitor
+  workspace, track sessions, is my monitoring working, monitoring not working,
+  no events from claude code, claude code monitoring, codex monitoring,
+  cursor monitoring, agents mine, where am i monitoring.
+  DO NOT load for: instrumenting your own agent's SDK code (use olakai-integrate),
   creating agents from scratch with custom code (use olakai-new-project),
-  troubleshooting existing monitoring (use olakai-troubleshoot).
+  generic SDK / KPI / event troubleshooting unrelated to a coding tool
+  (use olakai-troubleshoot).
 license: MIT
 metadata:
   author: olakai
-  version: "1.15.0"
+  version: "1.16.0"
 ---
 
 # Monitor Local Coding Agents with Olakai
 
-This skill sets up hooks-based monitoring for **local coding agents**. Every session in this workspace automatically reports activity to Olakai — no SDK code required.
+This skill sets up hooks-based monitoring for **local coding agents** and teaches you to **self-diagnose and repair** that monitoring. Every session in a monitored workspace reports activity to Olakai — no SDK code required.
+
+## Is this the right skill?
+
+| You want to… | Use |
+|--------------|-----|
+| Monitor **the coding tool itself** (Claude Code / Codex / Cursor sessions) | **this skill** |
+| Check / fix your **own** monitoring ("is it working?", "no events") | **this skill** → [Self-healing](#self-healing-diagnose-and-repair-your-own-monitoring) |
+| Instrument **your own agent's source code** with the `@olakai/sdk` / `olakai-sdk` | `olakai-integrate` |
+| Build a brand-new agent project from scratch | `olakai-new-project` |
+| Debug SDK / KPI / event issues unrelated to a coding tool | `olakai-troubleshoot` |
 
 Three tools are supported, all behind the same `olakai monitor` command, gated by a `--tool` flag:
 
@@ -34,6 +50,8 @@ Three tools are supported, all behind the same `olakai monitor` command, gated b
 | OpenAI Codex CLI | `codex` | `0.124.0` (stable hooks) |
 | Cursor | `cursor` | `1.7` (hooks beta; validated against `3.x`) |
 
+> **CLI requirement:** the `monitor list`, `monitor doctor`, `monitor repair`, and `agents mine` / `agents archive|rename|delete` commands documented here require **olakai-cli ≥ 0.7.0**. Older CLIs only have `init` / `status` / `disable`. Upgrade with `npm install -g olakai-cli@latest`.
+
 **What you get:**
 - Activity tracking on the **AI Coding Apps** tab in **Coding IQ → AI Impact** — a single table with all three tools' agents, filterable by source (`All / Claude Code / Codex / Cursor`).
 - Session-level metrics (tokens, turns, model)
@@ -42,6 +60,84 @@ Three tools are supported, all behind the same `olakai monitor` command, gated b
 
 **What is NOT included yet:**
 - Per-session cost tracking from the tool's own billing surface (Olakai computes its own model-based cost estimate)
+
+## Two lenses: machine vs account
+
+There are two distinct questions, answered by two distinct commands. Keep them straight.
+
+| Question | Lens | Command | Source of truth |
+|----------|------|---------|-----------------|
+| "What is monitored on **THIS machine**, and where?" | **Machine** | `olakai monitor list` | Local registry at `~/.olakai/registry.json` |
+| "What coding agents exist across my **whole account**?" | **Account** | `olakai agents mine` | Olakai backend (cross-machine) |
+
+Why two lenses? **The backend has no scope model.** Agents are account-scoped only — there are no per-repo / per-workspace / per-host fields. So "where am I monitoring?" is a purely **machine-local** fact that nobody persists server-side. The CLI records it in a local registry (`~/.olakai/registry.json`) that `monitor list` reads. `monitor doctor` is what bridges the two lenses — it flags drift between the registry, the backend, and what is actually on disk.
+
+```bash
+# Machine lens — every workspace monitored on this box, grouped by tool,
+# with scope + linked agent + a drift flag where registry/backend/disk disagree.
+olakai monitor list
+olakai monitor list --json
+
+# Account lens — your coding agents across the whole Olakai account.
+olakai agents mine
+olakai agents mine --source claude-code      # filter to one tool
+olakai agents mine --source codex --json
+```
+
+## Scope is honest per tool
+
+**Where the hooks live differs by tool — this matters for what gets attributed.**
+
+| Tool | Hook scope | Where hooks are written | Agent linkage (per-workspace) |
+|------|-----------|-------------------------|-------------------------------|
+| Claude Code | **Workspace** | `.claude/settings.json` (this workspace only) | `.olakai/monitor-claude-code.json` |
+| Codex CLI | **Global** | `~/.codex/config.toml` (all workspaces) | `.olakai/monitor-codex.json` |
+| Cursor | **Global** | `~/.cursor/hooks.json` (all workspaces) | `.olakai/monitor-cursor.json` |
+
+For all three tools, the per-workspace `.olakai/monitor-<tool>.json` file holds the **agent linkage** (API key + agent ID + endpoint).
+
+> ⚠️ **Unattributed activity caveat (Codex / Cursor).** Because Codex and Cursor install hooks **globally**, their hook fires in *every* workspace — including ones you never ran `olakai monitor init` in. When the hook fires in a workspace that has **no** `.olakai/monitor-<tool>.json`, it **silently exits** and that session is **NOT attributed to any agent** (no event is sent). This is expected: a global hook with no local linkage has nowhere to report. If you expect Codex/Cursor activity from a repo and see none, the most common cause is that you never ran `olakai monitor init --tool <tool>` *in that repo*. Run `olakai monitor list` to see exactly which workspaces are linked, and `olakai monitor doctor --tool <tool>` for an explanation in context.
+>
+> Claude Code does **not** have this caveat — its hooks are workspace-scoped, so they only fire where you installed them.
+
+## Self-healing: diagnose and repair your own monitoring
+
+If you are an installed coding agent and your monitoring seems broken (no events, missing KPIs, "is this even on?"), drive these commands in order. **Always start with `monitor list`, then `monitor doctor`, then escalate to `repair`.**
+
+```bash
+# 1. SEE — machine-wide picture: what's installed, where, and which entries are drifting.
+olakai monitor list
+
+# 2. DIAGNOSE — ordered health-check chain (registry → config → hooks → key → agent → events).
+olakai monitor doctor --tool claude-code         # or codex / cursor; --all for every workspace
+
+# 3. FIX — idempotent, best-effort auto-repair of what doctor flagged.
+olakai monitor doctor --tool claude-code --fix
+
+# 4. ESCALATE — forceful re-init that preserves agent linkage (heals a clobbered config).
+olakai monitor repair --tool claude-code
+```
+
+`monitor doctor` runs an **ordered chain** — each step gates the next, so the first failure is usually the real problem: `registry-entry` → `config-valid` → `hooks-installed` → `api-key-valid` → `agent-exists` → `events-flowing`. `--fix` is idempotent and best-effort (adopts the registry entry, re-merges missing hooks, re-links a rejected key). It will **not** recreate a missing agent unless you add `--recreate-missing` — a deliberate guard so a transient 404 can't spawn a duplicate. On a true 404, prefer `olakai monitor repair --tool <tool>`, which re-merges hooks, migrates legacy config, re-links the key only if invalid, and recreates the agent only on a genuine 404.
+
+> **For the full self-healing playbook** — every doctor check explained, the complete decision tree, `doctor --fix` vs `repair` comparison, and common repair scenarios — use the **`olakai-monitor-doctor`** skill.
+
+## Prerequisites
+
+```bash
+which olakai || echo "CLI_NOT_INSTALLED"
+olakai whoami 2>/dev/null || echo "NOT_AUTHENTICATED"
+```
+
+| Result | Action |
+|--------|--------|
+| `CLI_NOT_INSTALLED` | Run `npm install -g olakai-cli@latest`, then `olakai login` |
+| `NOT_AUTHENTICATED` | Run `olakai login` |
+| Shows email/account | Ready to proceed |
+
+> **Not set up at all?** Use `/olakai-get-started` first.
+
+You also need the local coding agent itself installed and operational in your workspace.
 
 ## Choose your tool
 
@@ -56,28 +152,6 @@ Are you monitoring …
 
 You can install monitoring for **multiple tools** in the same workspace — each tool stores its config in its own settings file and creates its own agent record.
 
-## Prerequisites
-
-Before starting, verify these requirements:
-
-```bash
-# 1. CLI installed?
-which olakai || echo "CLI_NOT_INSTALLED"
-
-# 2. Authenticated?
-olakai whoami 2>/dev/null || echo "NOT_AUTHENTICATED"
-```
-
-| Result | Action |
-|--------|--------|
-| `CLI_NOT_INSTALLED` | Run `npm install -g olakai-cli@latest`, then `olakai login` |
-| `NOT_AUTHENTICATED` | Run `olakai login` |
-| Shows email/account | Ready to proceed |
-
-> **Not set up at all?** Use `/olakai-get-started` first.
-
-You also need the local coding agent itself installed and operational in your workspace.
-
 ## Quick Setup — Claude Code
 
 ### Step 1: Initialize monitoring
@@ -88,20 +162,22 @@ olakai monitor init --tool claude-code
 
 **What it does:**
 1. Creates an agent with `AgentSource.CLAUDE_CODE` on your Olakai account
-2. Writes `Stop` and `SubagentStop` hook entries to `.claude/settings.json`
+2. Writes `Stop` and `SubagentStop` hook entries to `.claude/settings.json` (**workspace-scoped**)
 3. Saves configuration to `.olakai/monitor-claude-code.json` (API key, agent ID, endpoint). Pre-Stage-2 installs at `.claude/olakai-monitor.json` are auto-migrated on first read.
+4. Records this workspace in the machine registry (`~/.olakai/registry.json`) so `monitor list` / `doctor` can see it.
 
 The command is interactive — it prompts for an agent name if one is not provided, and lets you pick an existing agent or create a new one.
 
-> **Re-running `olakai monitor init --tool claude-code`**: Settings-merge preserves any user-customized Olakai hook commands. It will not overwrite manually-edited commands. For a clean reinstall that refreshes hook commands, run `olakai monitor disable --tool claude-code` first, then `olakai monitor init --tool claude-code`.
+> **Re-running `olakai monitor init --tool claude-code`**: Settings-merge preserves any user-customized Olakai hook commands. It will not overwrite manually-edited commands. For a clean reinstall that refreshes hook commands, run `olakai monitor disable --tool claude-code` first, then `olakai monitor init --tool claude-code`. To heal a clobbered config without losing the agent, prefer `olakai monitor repair --tool claude-code`.
 
 ### Step 2: Verify
 
 ```bash
-olakai monitor status --tool claude-code
+olakai monitor status --tool claude-code      # this workspace
+olakai monitor doctor --tool claude-code      # full ordered health check
 ```
 
-Confirms `Stop` and `SubagentStop` hooks are registered in `.claude/settings.json` and the config at `.olakai/monitor-claude-code.json` is valid.
+`status` confirms `Stop` and `SubagentStop` hooks are registered in `.claude/settings.json` and the config at `.olakai/monitor-claude-code.json` is valid. `doctor` runs the deeper chain (registry → config → hooks → key → agent → events).
 
 ### What gets captured (Claude Code)
 
@@ -141,15 +217,18 @@ olakai monitor init --tool codex
 
 **What it does:**
 1. Creates an agent with `AgentSource.CODEX` on your Olakai account
-2. Writes a `Stop` hook entry into the inline `[hooks]` block of `~/.codex/config.toml` (the canonical Codex configuration file). Comment-preserving TOML serialization isn't supported by `@iarna/toml`, so existing comments in your `~/.codex/config.toml` may be reformatted on first install — the CLI prints a warning when this happens.
-3. Saves configuration to `.olakai/monitor-codex.json` (API key, agent ID, endpoint)
+2. Writes a `Stop` hook entry into the inline `[hooks]` block of `~/.codex/config.toml` (**global** — fires in every workspace). Comment-preserving TOML serialization isn't supported by `@iarna/toml`, so existing comments in your `~/.codex/config.toml` may be reformatted on first install — the CLI prints a warning when this happens.
+3. Saves configuration to `.olakai/monitor-codex.json` (API key, agent ID, endpoint) and records this workspace in `~/.olakai/registry.json`.
 
 > **Codex CLI ≥ 0.124.0 is required.** The hooks API was unstable in earlier Codex versions; the integration is only validated from `0.124.0` onward. Check with `codex --version` before running init.
+>
+> **Global-hook caveat:** because the Codex hook is global, running it in a workspace with no `.olakai/monitor-codex.json` produces **no event** (silent exit). See [Scope is honest per tool](#scope-is-honest-per-tool).
 
 ### Step 2: Verify
 
 ```bash
 olakai monitor status --tool codex
+olakai monitor doctor --tool codex
 ```
 
 ### What gets captured (Codex)
@@ -174,15 +253,18 @@ olakai monitor init --tool cursor
 
 **What it does:**
 1. Creates an agent with `AgentSource.CURSOR` on your Olakai account
-2. Writes `beforeSubmitPrompt`, `afterAgentResponse`, `sessionEnd`, and `stop` hook entries to `~/.cursor/hooks.json` (per-user install)
-3. Saves configuration to `.olakai/monitor-cursor.json` (API key, agent ID, endpoint)
+2. Writes `beforeSubmitPrompt`, `afterAgentResponse`, `sessionEnd`, and `stop` hook entries to `~/.cursor/hooks.json` (**global** per-user install — fires in every workspace)
+3. Saves configuration to `.olakai/monitor-cursor.json` (API key, agent ID, endpoint) and records this workspace in `~/.olakai/registry.json`.
 
 > **Cursor ≥ 1.7 is required and the Cursor hooks API is in beta.** The integration is validated against Cursor `3.x` but the upstream hook contract may shift. If hooks stop firing after a Cursor update, see [Troubleshooting](#troubleshooting).
+>
+> **Global-hook caveat:** as with Codex, the Cursor hook is global, so a workspace without `.olakai/monitor-cursor.json` produces no event. See [Scope is honest per tool](#scope-is-honest-per-tool).
 
 ### Step 2: Verify
 
 ```bash
 olakai monitor status --tool cursor
+olakai monitor doctor --tool cursor
 ```
 
 ### What gets captured (Cursor)
@@ -194,7 +276,7 @@ In addition to the standard fields (prompt, response, tokens, modelName, chatId,
 
 ## Pasted API key validation
 
-When you select an **existing agent** during `olakai monitor init` and the CLI asks you to paste the API key, the CLI now validates that the key actually resolves to the agent you picked:
+When you select an **existing agent** during `olakai monitor init` and the CLI asks you to paste the API key, the CLI validates that the key actually resolves to the agent you picked:
 
 1. The CLI calls `GET /api/monitoring/prompt/me` with your pasted key
 2. It checks the resolved agent ID matches the agent you selected from the list
@@ -228,7 +310,7 @@ Confirm:
 - For Cursor specifically, `userEmail` is set from the hook payload
 - `kpiData` shows numbers, not strings or nulls
 
-Replace `AGENT_ID` with the ID shown by `olakai monitor status --tool <tool>`.
+Replace `AGENT_ID` with the ID shown by `olakai monitor status --tool <tool>` (or `olakai monitor list`).
 
 ## KPI Configuration
 
@@ -270,6 +352,7 @@ olakai kpis create \
   --agent-id AGENT_ID \
   --calculator-id formula \
   --formula "IF(Complexity = \"complex\", 1, 0)" \
+  --scope PROMPT_REQUEST \
   --aggregation SUM
 ```
 
@@ -289,35 +372,35 @@ olakai kpis create --name "Session Sentiment" \
 
 ## Checking Your Data
 
-### Quick health check
-
 ```bash
-olakai monitor status --tool <claude-code|codex|cursor>
-```
+# Health (machine, single-workspace, account)
+olakai monitor list                                       # MACHINE: everything monitored on this box
+olakai monitor doctor --tool <tool>                       # ordered health check (--all for every workspace)
+olakai monitor status --tool <tool>                       # quick single-workspace status
+olakai agents mine [--source claude-code|codex|cursor]    # ACCOUNT: your coding agents
 
-### Recent events
-
-```bash
+# Events + KPIs for one agent
 olakai activity list --agent-id AGENT_ID --limit 10
-```
-
-### Session decoration status
-
-```bash
-olakai activity sessions --agent-id AGENT_ID
-```
-
-Sessions with `DECORATED` status have KPI data populated.
-
-### KPI snapshot
-
-```bash
+olakai activity sessions --agent-id AGENT_ID              # decoration status (DECORATED = KPIs populated)
 olakai activity kpis --agent-id AGENT_ID --json
 ```
 
-### Dashboard
+**Dashboard:** Navigate to **Coding IQ → AI Impact → AI Coding Apps** at https://app.olakai.ai. The unified table shows agents from all three tools side-by-side, with a **source filter chip** (`All / Claude Code / Codex / Cursor`, default `All`).
 
-Navigate to **Coding IQ → AI Impact → AI Coding Apps** in the Olakai web dashboard at https://app.olakai.ai. The unified table shows agents from all three tools side-by-side, with a **source filter chip** (`All / Claude Code / Codex / Cursor`, default `All`) so you can compare or focus on one tool.
+## Agent lifecycle (account-wide)
+
+These act on the agent record on the Olakai backend, across all machines — not on local hooks:
+
+```bash
+olakai agents archive AGENT_ID                # hide an agent you no longer use
+olakai agents archive AGENT_ID --unarchive    # bring it back
+olakai agents rename AGENT_ID "New Name"      # rename
+olakai agents delete AGENT_ID                 # permanent delete
+```
+
+> **Backend requirement:** `agents archive` / `rename` require a current Olakai backend (self-owner lifecycle support shipped alongside these CLI commands). Against older backends these are admin-only and `archive` may no-op silently — if archive appears to do nothing, your backend predates the feature.
+
+To stop hooks on **this machine** without touching the account record, use `olakai monitor disable` instead (below).
 
 ## Disabling Monitoring
 
@@ -332,9 +415,10 @@ olakai monitor disable --tool cursor
 **What this does:**
 - Removes the registered hooks from the tool's settings file
 - Removes the corresponding `monitor-claude-code.json` / `monitor-codex.json` / `monitor-cursor.json` (and any legacy `.claude/olakai-monitor.json`)
+- Removes this workspace's entry from the machine registry (`~/.olakai/registry.json`)
 
 **What this does NOT do:**
-- Does not delete the agent record on Olakai
+- Does not delete the agent record on Olakai (use `olakai agents archive`/`delete` for that)
 - Does not delete historical event data
 - Does not affect other monitored tools or SDK-based monitoring
 
@@ -342,17 +426,7 @@ To re-enable, run `olakai monitor init --tool <tool>` again.
 
 ## Troubleshooting
 
-### No events appearing
-
-1. Check status: `olakai monitor status --tool <tool>`
-2. Verify the tool's settings file contains the registered hook entries
-3. Verify the corresponding `*-monitor.json` config exists and has a valid API key
-4. Confirm you completed at least one turn after setup (hooks fire on Stop, not on Start)
-5. **Enable debug mode**: `export OLAKAI_MONITOR_DEBUG=1`, do a turn, then inspect `/tmp/olakai-monitor-debug-<pid>.log`. Under debug, the dispatcher emits these structured events:
-   - `dispatcher/posting` — payload about to be posted to Olakai
-   - `dispatcher/posted` — HTTP status + a 500-byte preview of the response body
-   - `dispatcher/post-error` — error details if the POST itself failed
-   These are the most useful signals when events seem to disappear.
+> **No events, missing KPIs, deleted/404 agent, drifted config, hooks stopped firing?** That is the **self-healing playbook** — use the **`olakai-monitor-doctor`** skill, or just run `olakai monitor doctor --tool <tool>` (add `--fix` to auto-repair, or `olakai monitor repair --tool <tool>` to forcefully re-init while preserving the agent). The subsections below cover only setup-specific transcript/KPI issues that doctor does not auto-fix.
 
 ### Events appear but `prompt`, `response`, `tokens`, or `modelName` are empty/null
 
@@ -366,14 +440,6 @@ This usually means the transcript file at `transcript_path` (Claude Code) or the
 For Claude Code specifically, the empty-parse silent-exit guard means the hook returns null (no event) when prompt empty AND response empty AND `numTurns` is 0 — protective against unrecognized payload shapes. If you see no events at all and debug mode shows `transcript-parsed: empty`, you've hit this guard.
 
 Enable `OLAKAI_MONITOR_DEBUG=1` to confirm whether transcript reading succeeded. Look for `transcript-read-failed` or `transcript-parsed` entries in the debug log.
-
-### Cursor: hooks stop firing after a Cursor update
-
-Cursor's hook API is in beta. If a Cursor update breaks compatibility:
-
-1. Confirm Cursor version: `cursor --version` — must be ≥ `1.7`
-2. Re-run `olakai monitor init --tool cursor` to refresh hook entries
-3. Check the [olakai-cli changelog](https://www.npmjs.com/package/olakai-cli) for compatibility notes against newer Cursor releases
 
 ### Events appear but no KPIs
 
@@ -395,43 +461,40 @@ olakai kpis create --name "Time Saved" \
 
 The hook is designed to fail silently — errors in the monitoring hook should never interrupt your local agent session. If you suspect issues:
 
-1. Check config exists: `cat .olakai/monitor-claude-code.json` (or the Codex/Cursor equivalent: `.olakai/monitor-codex.json`, `.olakai/monitor-cursor.json`)
+1. Check config exists: `cat .olakai/monitor-claude-code.json` (or the Codex/Cursor equivalent)
 2. Verify API key is valid: `olakai agents get AGENT_ID --json | jq '.apiKey'`
 3. Test connectivity: `olakai whoami`
 
 ### Deeper issues
 
-Use `/olakai-troubleshoot` for comprehensive diagnostics including:
-- API key validation
-- Endpoint connectivity
-- Event payload inspection
-- KPI formula debugging
+Use `/olakai-troubleshoot` for comprehensive diagnostics including API key validation, endpoint connectivity, event payload inspection, and KPI formula debugging.
 
 ## Quick Reference
 
 ```bash
 # Setup (pick the right --tool)
-olakai monitor init --tool claude-code           # Claude Code
-olakai monitor init --tool codex                 # Codex CLI (>= 0.124.0)
-olakai monitor init --tool cursor                # Cursor (>= 1.7, hooks beta)
+olakai monitor init --tool claude-code           # Claude Code (workspace-scoped hooks)
+olakai monitor init --tool codex                 # Codex CLI (>= 0.124.0, global hooks)
+olakai monitor init --tool cursor                # Cursor (>= 1.7, hooks beta, global hooks)
 
-# Status / disable
+# See what's monitored (two lenses)
+olakai monitor list                              # MACHINE: everything on this box + drift flags
+olakai agents mine [--source claude-code|codex|cursor]   # ACCOUNT: agents across the whole account
+
+# Diagnose + repair your own monitoring
+olakai monitor doctor --tool <tool> [--fix] [--recreate-missing]
+olakai monitor doctor --all                      # every workspace on this machine
+olakai monitor repair --tool <tool>              # forceful re-init, preserves agent linkage
 olakai monitor status --tool <claude-code|codex|cursor>
 olakai monitor disable --tool <claude-code|codex|cursor>
 
-# View activity
-olakai activity list --agent-id AGENT_ID --limit 10
-olakai activity get EVENT_ID --json
-olakai activity sessions --agent-id AGENT_ID
+# Agent lifecycle (account-wide, backend record)
+olakai agents archive AGENT_ID [--unarchive]
+olakai agents rename AGENT_ID "New Name"
+olakai agents delete AGENT_ID
 
-# KPIs
-olakai kpis list --agent-id AGENT_ID
-olakai kpis create --calculator-id classifier --template-id time_saved_estimator --scope CHAT --agent-id AGENT_ID
-olakai activity kpis --agent-id AGENT_ID --json
-
+# Activity + KPIs — see "Checking Your Data" above
 # Debug
-export OLAKAI_MONITOR_DEBUG=1                    # Verbose dispatcher logs at /tmp/olakai-monitor-debug-<pid>.log
-
-# Dashboard
-# Coding IQ -> AI Impact -> AI Coding Apps at https://app.olakai.ai
+export OLAKAI_MONITOR_DEBUG=1                     # Verbose dispatcher logs at /tmp/olakai-monitor-debug-<pid>.log
+# Dashboard: Coding IQ -> AI Impact -> AI Coding Apps at https://app.olakai.ai
 ```
